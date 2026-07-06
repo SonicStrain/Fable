@@ -1,0 +1,12 @@
+{
+  "appId": "com.greyharbor.mystery",
+  "appName": "Grey Harbor",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#060913"
+  },
+  "ios": {
+    "backgroundColor": "#060913",
+    "contentInset": "never"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "grey-harbor-mystery",
+  "version": "1.0.0",
+  "description": "The Keeper of Grey Harbor - a point & click mystery game for Android and iOS",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync",
+    "build:android": "cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/ios": "^8.4.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
+  }
+}

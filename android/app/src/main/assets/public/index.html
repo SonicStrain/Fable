@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>The Keeper of Grey Harbor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23060913'/%3E%3Cpath d='M13 26 L19 26 L17.5 8 L14.5 8 Z' fill='%23d5d9e2'/%3E%3Crect x='13.5' y='4' width='5' height='4' fill='%23ffe9a8'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== Title screen ===== -->
+  <div id="title-screen" class="screen">
+    <div id="title-art"></div>
+    <div class="title-content">
+      <h1 class="game-title"><span>The Keeper of</span>Grey Harbor</h1>
+      <p class="tagline">A point &amp; click mystery</p>
+      <div class="title-buttons">
+        <button id="btn-continue" class="btn btn-primary hidden">Continue</button>
+        <button id="btn-new" class="btn">New Game</button>
+      </div>
+      <p class="credit">Tap objects to investigate &middot; Tap an item, then the world, to use it</p>
+    </div>
+  </div>
+
+  <!-- ===== Game screen ===== -->
+  <div id="game-screen" class="screen hidden">
+    <div id="topbar">
+      <button id="btn-menu" class="icon-btn" aria-label="Menu">&#9776;</button>
+      <div id="scene-name">Grey Harbor</div>
+      <div class="topbar-right">
+        <button id="btn-hint" class="icon-btn" aria-label="Show hotspots">?</button>
+        <button id="btn-journal" class="icon-btn" aria-label="Journal">&#9998;</button>
+      </div>
+    </div>
+
+    <div id="stage-wrap">
+      <div id="stage"></div>
+      <div id="caption" class="hidden"></div>
+    </div>
+
+    <div id="inventory">
+      <div id="inv-slots"></div>
+    </div>
+  </div>
+
+  <!-- ===== Dialogue overlay ===== -->
+  <div id="dialog-overlay" class="overlay hidden">
+    <div id="dialog-box">
+      <div id="dialog-portrait"></div>
+      <div id="dialog-main">
+        <div id="dialog-speaker"></div>
+        <div id="dialog-text"></div>
+        <div id="dialog-choices"></div>
+        <div id="dialog-next" class="hidden">&#9660;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Journal overlay ===== -->
+  <div id="journal-overlay" class="overlay hidden">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Field Notes</h2>
+        <button class="icon-btn close-btn" data-close="journal-overlay">&times;</button>
+      </div>
+      <div id="objective-box"></div>
+      <div id="clue-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== Puzzle overlay ===== -->
+  <div id="puzzle-overlay" class="overlay hidden">
+    <div class="panel" id="puzzle-panel"></div>
+  </div>
+
+  <!-- ===== Menu overlay ===== -->
+  <div id="menu-overlay" class="overlay hidden">
+    <div class="panel small">
+      <div class="panel-head">
+        <h2>Menu</h2>
+        <button class="icon-btn close-btn" data-close="menu-overlay">&times;</button>
+      </div>
+      <div class="menu-buttons">
+        <button id="btn-resume" class="btn btn-primary">Resume</button>
+        <button id="btn-howto" class="btn">How to Play</button>
+        <button id="btn-restart" class="btn btn-danger">Restart Story</button>
+      </div>
+      <p class="menu-note">Progress is saved automatically.</p>
+    </div>
+  </div>
+
+  <!-- ===== How-to overlay ===== -->
+  <div id="howto-overlay" class="overlay hidden">
+    <div class="panel small">
+      <div class="panel-head">
+        <h2>How to Play</h2>
+        <button class="icon-btn close-btn" data-close="howto-overlay">&times;</button>
+      </div>
+      <ul class="howto-list">
+        <li><b>Tap</b> anything that looks interesting &mdash; people, doors, objects.</li>
+        <li><b>Pick up</b> items; they appear in your satchel at the bottom.</li>
+        <li><b>Use an item</b> by tapping it in the satchel, then tapping where you want to use it.</li>
+        <li>Stuck? Tap <b>?</b> to reveal every interactive spot, and check your <b>Field Notes</b> for the current objective.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== Ending screen ===== -->
+  <div id="ending-screen" class="screen hidden">
+    <div id="ending-art"></div>
+    <div class="title-content">
+      <h1 class="game-title small-title">The Light Endures</h1>
+      <div id="ending-text"></div>
+      <div class="title-buttons">
+        <button id="btn-again" class="btn btn-primary">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div id="toast" class="hidden"></div>
+</div>
+
+<script src="js/art.js"></script>
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+</body>
+</html>
