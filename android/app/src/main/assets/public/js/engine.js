@@ -103,9 +103,12 @@
 
   function showTitle() {
     el.titleArt.innerHTML = Art.title();
-    const has = !!loadSave();
-    $('btn-continue').classList.toggle('hidden', !has);
+    const s = loadSave();
+    const btn = $('btn-continue');
+    btn.classList.toggle('hidden', !s);
+    if (s) btn.textContent = 'Continue — ' + Scenes[s.scene].name;
     show(el.title);
+    Music.setScene('title');
   }
 
   function startGame(fresh) {
@@ -125,6 +128,7 @@
     el.endingArt.innerHTML = Art.ending();
     el.endingText.innerHTML = '';
     show(el.ending);
+    Music.setScene('ending');
     clearSave();
     EndingText.forEach((p, i) => {
       const par = document.createElement('p');
@@ -141,6 +145,7 @@
   function renderScene() {
     const scene = Scenes[state.scene];
     el.sceneName.textContent = scene.name;
+    Music.setScene(state.scene);
     el.stage.innerHTML = scene.art(state.flags);
     const svg = el.stage.querySelector('svg');
     if (!svg) return;
@@ -607,6 +612,26 @@
       el.menuOverlay.classList.add('hidden');
       startGame(true);
     });
+    $('btn-save-exit').addEventListener('click', () => {
+      save(); // belt & braces: progress is already saved on every change
+      closeAllOverlays();
+      showTitle();
+      toast('Progress saved. Rest easy.');
+    });
+
+    /* ----- music ----- */
+    const musicButtons = ['btn-music', 'btn-music-title'].map($);
+    const musicMenuBtn = $('btn-music-menu');
+    function paintMusic(on) {
+      musicButtons.forEach(b => b.classList.toggle('muted', !on));
+      musicMenuBtn.textContent = 'Music: ' + (on ? 'On' : 'Off');
+    }
+    Music.onChange(paintMusic);
+    paintMusic(Music.isOn());
+    musicButtons.forEach(b => b.addEventListener('click', () => Music.toggle()));
+    musicMenuBtn.addEventListener('click', () => Music.toggle());
+    // audio contexts must start from a user gesture on mobile
+    document.addEventListener('pointerdown', () => Music.unlock(), { capture: true });
 
     document.querySelectorAll('.close-btn[data-close]').forEach(b => {
       b.addEventListener('click', () => $(b.dataset.close).classList.add('hidden'));

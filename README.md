@@ -17,8 +17,16 @@ frameworks, fully offline), atmospheric, and story-driven.
   a lens-alignment mechanism, and a rusted winch that needs both oil and a
   missing crank.
 - **Branching dialogue** with the folk of Grey Harbor, a field-notes journal
-  that tracks clues and your current objective, tap-to-use inventory, a
-  hotspot hint button, and automatic saving.
+  that tracks clues and your current objective, tap-to-use inventory, and a
+  hotspot hint button.
+- **Save & continue** — progress saves automatically on every action, the
+  menu has an explicit "Save & Exit to Title", and the title screen's
+  Continue button shows exactly where you left off.
+- **A procedural soundtrack** — every scene has its own generative ambient
+  score (dusk harbor waves, a music-box cottage, wind on the black cliffs,
+  echoing cave drips), synthesized live with WebAudio so it adds zero bytes
+  of assets. Toggle it with the ♪ button on the title screen, in the top
+  bar, or from the menu; the preference is remembered.
 - All art is procedural inline SVG with subtle ambient animation (sweeping
   beams, flickering fires, drifting waves) — crisp at any resolution and
   battery-friendly.
@@ -101,6 +109,7 @@ test/           automated playthrough + device-matrix tests
 ```
 
 - `js/art.js` — all scene art, portraits, and item icons as generated SVG.
+- `js/audio.js` — the generative WebAudio soundtrack (per-scene moods).
 - `js/data.js` — the story: items, clues, objectives, dialogue trees, scene
   hotspots, and puzzle definitions.
 - `js/engine.js` — the point-&-click engine: state, saving, rendering,

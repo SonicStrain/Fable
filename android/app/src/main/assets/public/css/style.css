@@ -86,7 +86,16 @@ html, body {
   z-index: 5;
 }
 .topbar-right { display: flex; gap: 8px; }
-#scene-name { font-size: 15px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); opacity: .9; }
+#scene-name {
+  flex: 1; min-width: 0;
+  font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold); opacity: .9;
+  padding: 0 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 400px) {
+  #scene-name { font-size: 12.5px; letter-spacing: 1px; }
+}
 
 .icon-btn {
   width: 40px; height: 40px;
@@ -98,6 +107,24 @@ html, body {
   cursor: pointer;
 }
 .icon-btn:active { transform: scale(.94); }
+
+/* music toggle */
+.music-btn { position: relative; color: var(--gold); }
+.music-btn.muted { color: var(--ink); opacity: .55; }
+.music-btn.muted::after {
+  content: '';
+  position: absolute; left: 8px; right: 8px; top: 50%;
+  height: 2.5px;
+  background: var(--danger);
+  transform: rotate(-38deg);
+  border-radius: 2px;
+}
+.title-corner {
+  position: absolute;
+  top: calc(14px + var(--safe-top));
+  right: 14px;
+  z-index: 3;
+}
 
 #stage-wrap { flex: 1; position: relative; overflow: hidden; background: #060913; }
 #stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }

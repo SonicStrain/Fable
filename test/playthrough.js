@@ -393,6 +393,44 @@ function ok(cond, msg) {
   ok(hinted, 'hint mode flashes hotspots');
   await shot('15-hints');
 
+  console.log('\n== Music system ==');
+  ok(await page.locator('#btn-music').isVisible(), 'music button in the top bar');
+  const audioState = await page.evaluate(() => ({
+    on: Music.isOn(),
+    ctxState: (() => { try { return !!(window.AudioContext || window.webkitAudioContext); } catch (e) { return false; } })(),
+  }));
+  ok(audioState.on === true, 'music defaults to on');
+  ok(audioState.ctxState, 'WebAudio available');
+  await page.locator('#btn-music').click();
+  ok(await page.evaluate(() => !Music.isOn()), 'toggle turns music off');
+  ok(await page.evaluate(() => document.getElementById('btn-music').classList.contains('muted')), 'button shows muted state');
+  ok(await page.evaluate(() => localStorage.getItem('greyharbor_music') === 'off'), 'preference persisted');
+  await page.reload();
+  await page.waitForTimeout(500);
+  ok(await page.evaluate(() => !Music.isOn()), 'muted preference survives reload');
+  await page.locator('#btn-music-title').click();
+  ok(await page.evaluate(() => Music.isOn() && localStorage.getItem('greyharbor_music') === 'on'), 'title-screen toggle re-enables music');
+  // back into the game for the save & exit test
+  await page.locator('#btn-continue').click();
+  await page.waitForTimeout(400);
+  const musicScene = await page.evaluate(() => {
+    // menu music toggle reflects state
+    return document.getElementById('btn-music-menu').textContent;
+  });
+  ok(musicScene === 'Music: On', 'menu shows music state (' + musicScene + ')');
+
+  console.log('\n== Save & Exit to Title ==');
+  await page.locator('#btn-menu').click();
+  await page.locator('#btn-save-exit').click();
+  await page.waitForTimeout(300);
+  ok(await page.locator('#title-screen').isVisible(), 'returned to title');
+  const contLabel = await page.locator('#btn-continue').textContent();
+  ok(contLabel.includes('Continue —'), 'Continue shows saved location (' + contLabel.trim() + ')');
+  await page.locator('#btn-continue').click();
+  await page.waitForTimeout(400);
+  s = await state();
+  ok(s.scene === 'exterior' && s.flags.metMarta === true, 'continue restores the saved game');
+
   console.log('\n== Console health ==');
   ok(consoleErrors.length === 0, 'no console/page errors' + (consoleErrors.length ? ' -> ' + consoleErrors.join(' | ') : ''));
 
