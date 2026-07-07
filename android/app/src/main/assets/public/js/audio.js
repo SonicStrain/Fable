@@ -20,6 +20,7 @@ const Music = (() => {
     cliffs:   { pad: [36, 43, 48, 51], scale: [48, 51, 53, 55, 58, 60, 63], stepMs: 2600, rest: .60, decay: 3.0, noise: 'wind',  noiseLvl: .09, melLvl: .08, padLvl: .06 },
     cave:     { pad: [41, 48, 53],     scale: [],                            stepMs: 0,    rest: 1,   decay: 0,   noise: 'waves', noiseLvl: .05, melLvl: 0,   padLvl: .06, drips: true },
     ending:   { pad: [41, 48, 53, 57, 60], scale: [53, 55, 57, 60, 62, 65, 67], stepMs: 1600, rest: .35, decay: 2.2, noise: 'waves', noiseLvl: .05, melLvl: .10, padLvl: .06 },
+    fog:      { pad: [36, 43, 48],         scale: [48, 50, 53, 55, 58],         stepMs: 3000, rest: .65, decay: 3.4, noise: 'hush',  noiseLvl: .09, melLvl: .07, padLvl: .06 },
   };
 
   let ctx = null, master = null, delaySend = null;
@@ -120,6 +121,7 @@ const Music = (() => {
       src.buffer = noiseBuf; src.loop = true;
       const nf = ctx.createBiquadFilter();
       if (m.noise === 'wind') { nf.type = 'bandpass'; nf.frequency.value = 500; nf.Q.value = .6; }
+      else if (m.noise === 'hush') { nf.type = 'lowpass'; nf.frequency.value = 240; } // fog: the world muffled
       else { nf.type = 'lowpass'; nf.frequency.value = 480; }
       const ng = ctx.createGain();
       ng.gain.value = m.noiseLvl;
@@ -215,6 +217,28 @@ const Music = (() => {
     unlock,
     isOn: () => enabled,
     status: () => ({ ctx: ctx ? ctx.state : 'none', playing: !!graph, scene }),
+    /* synthesized bronze bell strike (inharmonic partials) */
+    bell(strength) {
+      try {
+        if (!ctx || !unlocked || !enabled) return;
+        const base = 196; // G3 fundamental
+        const partials = [[0.5, .5], [1, 1], [1.183, .35], [1.506, .3], [2.0, .28], [2.662, .18], [3.011, .12]];
+        const t = ctx.currentTime;
+        const vol = .22 + .05 * Math.min(strength || 1, 3);
+        partials.forEach(([r, a], i) => {
+          const o = ctx.createOscillator();
+          o.type = 'sine';
+          o.frequency.value = base * r;
+          const e = ctx.createGain();
+          e.gain.setValueAtTime(0, t);
+          e.gain.linearRampToValueAtTime(vol * a, t + .006);
+          e.gain.exponentialRampToValueAtTime(.0001, t + 3.8 - i * .3);
+          o.connect(e); e.connect(master);
+          if (delaySend) e.connect(delaySend);
+          o.start(t); o.stop(t + 4);
+        });
+      } catch (e) {}
+    },
     onChange(fn) { listeners.push(fn); },
     setScene(id) {
       if (scene === id) return;

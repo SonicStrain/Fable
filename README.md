@@ -1,21 +1,26 @@
-# The Keeper of Grey Harbor
+# The Mysteries of Grey Harbor
 
-A point-&-click mystery game for **Android and iOS**. Lightweight (the whole
-game is ~140 KB of hand-crafted SVG art and vanilla JavaScript — no engine, no
-frameworks, fully offline), atmospheric, and story-driven.
+A two-chapter point-&-click mystery game for **Android and iOS**. Lightweight
+(the whole game is ~180 KB of hand-crafted SVG art and vanilla JavaScript — no
+engine, no frameworks, fully offline), atmospheric, and story-driven.
 
-> Your uncle Alvar kept the Grey Harbor light for nine years. Three weeks ago
-> his letters stopped — mid-sentence. The light still turns every night, but
-> its keeper is gone. Take the first boat north, and read the town the way he
-> taught you to read charts.
+> **Chapter One — The Keeper of Grey Harbor.** Your uncle Alvar kept the
+> light for nine years. Three weeks ago his letters stopped — mid-sentence.
+> The light still turns every night, but its keeper is gone.
+>
+> **Chapter Two — The Silent Bell** *(unlocked by finishing Chapter One)*.
+> Winter fog swallows the harbor, Marta's midnight ferry is feeling her way
+> home — and for the first time in eighty years, the fog bell of Bell Rock
+> is silent.
 
 ## The game
 
-- **6 scenes** — the dusk dock, the lighthouse point, the keeper's cottage,
-  the lamp room, the black cliffs, and a sea cave.
-- **4 puzzles** — a code lock fed by a stopped clock, a Caesar-wheel cipher,
-  a lens-alignment mechanism, and a rusted winch that needs both oil and a
-  missing crank.
+- **Two chapters, nine scenes** — from the dusk dock and the smuggler's sea
+  cave to the fog-bound shore and Bell Rock itself, with an animated
+  prologue cutscene opening each chapter.
+- **6 puzzles** — a code lock fed by a stopped clock, a Caesar-wheel cipher,
+  a lens-alignment mechanism, a rusted winch, a storm-year padlock, and a
+  bell you must ring in time with its swing.
 - **Branching dialogue** with the folk of Grey Harbor, a field-notes journal
   that tracks clues and your current objective, tap-to-use inventory, and a
   hotspot hint button.

@@ -59,6 +59,48 @@ html, body {
 
 .title-buttons { display: flex; flex-direction: column; gap: 12px; align-items: center; }
 
+/* chapter select */
+#chapter-list { display: flex; flex-direction: column; gap: 12px; max-width: 380px; margin: 0 auto; }
+.chapter-card {
+  text-align: left;
+  padding: 13px 16px;
+  background: rgba(20,27,48,.82);
+  border: 1px solid rgba(232,180,74,.4);
+  border-radius: 16px;
+}
+.chapter-card.locked { opacity: .62; border-style: dashed; }
+.chapter-label { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--teal); }
+.chapter-card h3 { font-size: 19px; color: var(--gold); margin: 2px 0 10px; }
+.chapter-btns { display: flex; gap: 9px; }
+.chapter-btns .btn { min-width: 0; flex: 1; padding: 10px 8px; font-size: 15.5px; }
+.chapter-lock { font-size: 13.5px; font-style: italic; opacity: .85; margin-bottom: 2px; }
+.chapter-done { color: var(--teal); font-size: 12px; margin-left: 6px; }
+
+/* ending unlock banner */
+.unlock-banner {
+  margin: 6px auto 18px;
+  max-width: 380px;
+  padding: 11px 16px;
+  background: rgba(87,196,184,.1);
+  border: 1px solid rgba(87,196,184,.55);
+  border-radius: 12px;
+  color: var(--teal);
+  font-size: 15px;
+  font-style: normal;
+}
+
+/* bell puzzle */
+#bell-svg { display: block; margin: 0 auto 10px; width: min(280px, 72vw); height: auto; }
+.bell-pull-btn { display: block; margin: 0 auto; }
+.bell-progress { display: flex; gap: 10px; justify-content: center; margin: 10px 0 4px; }
+.bell-pip {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--gold-dim);
+  background: transparent;
+  transition: background .2s, box-shadow .2s;
+}
+.bell-pip.hit { background: var(--gold); box-shadow: 0 0 10px rgba(232,180,74,.8); }
+
 .btn {
   font-family: inherit;
   font-size: 18px;

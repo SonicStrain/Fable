@@ -36,8 +36,14 @@ const SCENE_STATES = {
   cliffs: { cliffsOpen: true },
   cliffs_open: { cliffsOpen: true, caveOpen: true },
   cave: { cliffsOpen: true, caveOpen: true },
+  /* chapter two */
+  lamp2: { b_met: true },
+  shore: {},
+  shore_open: { b_shedOpen: true, b_hasHook: true },
+  bellrock: {},
+  bellrock_late: { b_seenBell: true, b_nestLooted: true, b_chainOn: true },
 };
-const SCENE_OF = { cliffs_open: 'cliffs' };
+const SCENE_OF = { cliffs_open: 'cliffs', shore_open: 'shore', bellrock_late: 'bellrock' };
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });

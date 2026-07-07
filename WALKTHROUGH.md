@@ -1,9 +1,13 @@
-# The Keeper of Grey Harbor — Complete Walkthrough
+# The Mysteries of Grey Harbor — Complete Walkthrough
 
 > **Spoilers ahead.** This guide solves every puzzle and reveals the ending.
 > If you're just stuck, try the in-game helpers first: the **?** button
 > flashes every interactive spot in the scene, and your **Field Notes**
 > (pencil button) always show your current objective.
+
+The game has two chapters. **Chapter One: The Keeper of Grey Harbor** is
+available from the start; finishing it unlocks **Chapter Two: The Silent
+Bell**. Each chapter keeps its own save, so you can replay either any time.
 
 ## How the game works
 
@@ -15,6 +19,8 @@
   Menu → *Save & Exit to Title* and resume with *Continue*.
 
 ---
+
+# Chapter One — The Keeper of Grey Harbor
 
 ## Act 1 — The Dock
 
@@ -105,7 +111,68 @@ Everything you need for the drawer code is in this room.
 
 ---
 
-## Item reference
+# Chapter Two — The Silent Bell
+
+*Unlocked by finishing Chapter One.* Months later, winter fog swallows the
+harbor. Marta's ferry rounds Bell Rock at midnight — and the fog bell that
+should warn her off the rocks has gone silent.
+
+## Act 1 — The Lamp Room
+
+1. **Talk to Alvar** at the telescope (you can't leave until you do).
+   Either dialogue choice works. He sends you to Bell Rock: his skiff is by
+   the boat shed, down the shore path.
+2. Take the **stairs down** to the foggy shore.
+
+## Act 2 — The Foggy Shore
+
+1. Read the **notice board**: the shed combination is "the year the Great
+   Storm took the old pier."
+2. Read the **plaque on the jetty post**: "REBUILT AFTER THE GREAT STORM
+   — **1957**."
+3. Open the **boat shed** with code **1957**, then tap it again to take
+   the **oars**.
+4. Take the **boathook** hanging on the shed wall — you'll want it.
+5. Tap the **skiff** to row out to Bell Rock.
+
+## Act 3 — Bell Rock
+
+1. Tap the **bell**: the rope is frayed and the silver **striker chain is
+   gone** — worked loose link by link and carried off.
+2. Tap the **glittering nest** on the crag: the thief is a **magpie**, and
+   the chain hangs right off its hoard (tap the magpie itself for its
+   opinion of you).
+3. Use the **boathook on the nest** → the **striker chain** is yours.
+4. Use the **striker chain on the bell** to hang it back in place.
+5. Tap the **bell** to ring her — the timing mini-game:
+
+   > Watch the bell swing. **Tap PULL exactly when the swing reaches the
+   > gold marks at either end of the arc.** Three good pulls wake her
+   > voice. Pulling mid-swing does nothing (you'll be told you're early).
+
+6. DONG. The ferry's horn answers, Marta comes home shouting, and the
+   magpie files a formal complaint. Enjoy the epilogue.
+
+## Chapter Two at a glance
+
+| Puzzle | Answer |
+|---|---|
+| Boat shed padlock | **1957** (jetty plaque) |
+| Silent bell | Boathook → nest → chain → bell, then **pull at the gold marks ×3** |
+
+| Item | Where | Used on |
+|---|---|---|
+| Oars | Boat shed (after 1957) | The skiff rows once you have them |
+| Boathook | Boat shed wall | The magpie's nest |
+| Striker chain | The nest | The bell |
+
+**All Chapter Two field notes:** The midnight ferry (Alvar's briefing) ·
+The notice board · The jetty plaque · The silent bell (tap the bell) ·
+The thief (tap the nest) · A thief's hoard (loot the nest).
+
+---
+
+## Item reference (Chapter One)
 
 | Item | Where | Used on |
 |---|---|---|
@@ -116,7 +183,7 @@ Everything you need for the drawer code is in this room.
 | Cipher wheel | Locked drawer (cottage) | Logbook (lamp room) |
 | Winch crank | Pried crates (dock) | Winch (cliffs), after oiling |
 
-## Puzzle answers at a glance
+## Puzzle answers at a glance (Chapter One)
 
 | Puzzle | Answer |
 |---|---|
@@ -125,7 +192,7 @@ Everything you need for the drawer code is in this room.
 | Great lens | Rotate all three rings until every mark points **up** |
 | Winch gate | **Oil first**, then the **crank** |
 
-## All field notes (completionist list)
+## All field notes (Chapter One)
 
 1. **A keeper vanishes** — talk to Marta (automatic)
 2. **Where marigolds grow** — Marta, first Alvar question

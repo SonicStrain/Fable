@@ -53,6 +53,7 @@ function ok(cond, msg) {
   page.on('pageerror', e => consoleErrors.push('PAGEERROR: ' + e.message));
 
   /* ---------- helpers that play like a player ---------- */
+  let SAVEKEY = 'greyharbor_save_v1'; // switched when chapter two starts
   // Tap a hotspot by id: find a screen point inside the hotspot where it is
   // actually the topmost element (a player aims at the visible part of an object).
   async function tap(hsId) {
@@ -61,8 +62,8 @@ function ok(cond, msg) {
       const c = document.getElementById('caption');
       if (!c.classList.contains('hidden')) c.click();
     });
-    const r = await page.evaluate(id => {
-      const save = JSON.parse(localStorage.getItem('greyharbor_save_v1'));
+    const r = await page.evaluate(({ id, KEY }) => {
+      const save = JSON.parse(localStorage.getItem(KEY));
       const defs = Scenes[save.scene].hotspots;
       const visible = defs.filter(h => !h.visible || h.visible(save.flags));
       const idx = visible.findIndex(h => h.id === id);
@@ -79,17 +80,17 @@ function ok(cond, msg) {
         }
       }
       return { err: 'hotspot ' + id + ' has no tappable on-screen point (scene ' + save.scene + ')' };
-    }, hsId);
+    }, { id: hsId, KEY: SAVEKEY });
     if (r.err) throw new Error(r.err);
     await page.mouse.click(r.x, r.y); // real coordinate click through the compositor
     await page.waitForTimeout(120);
   }
 
   async function selectItem(itemId) {
-    const idx = await page.evaluate(id => {
-      const s = JSON.parse(localStorage.getItem('greyharbor_save_v1'));
+    const idx = await page.evaluate(({ id, KEY }) => {
+      const s = JSON.parse(localStorage.getItem(KEY));
       return s.inv.indexOf(id);
-    }, itemId);
+    }, { id: itemId, KEY: SAVEKEY });
     if (idx < 0) throw new Error('item not in inventory: ' + itemId);
     const items = page.locator('.inv-item');
     await items.nth(idx).click();
@@ -102,8 +103,9 @@ function ok(cond, msg) {
   }
 
   async function state() {
-    return page.evaluate(() => JSON.parse(localStorage.getItem('greyharbor_save_v1')));
+    return page.evaluate(KEY => JSON.parse(localStorage.getItem(KEY)), SAVEKEY);
   }
+  const state2 = state, tap2 = (...a) => tap(...a);
 
   async function captionText() {
     return page.evaluate(() => document.getElementById('caption').textContent);
@@ -144,6 +146,8 @@ function ok(cond, msg) {
   await page.waitForTimeout(600);
   ok(await page.locator('#title-screen .game-title').isVisible(), 'title screen shows');
   ok((await page.locator('#btn-continue').isHidden()), 'no Continue button without a save');
+  ok(await page.locator('#lock-ch2').isVisible(), 'Chapter Two starts locked');
+  ok(await page.locator('#btn-new-ch2').isHidden(), 'no way to start Chapter Two while locked');
   await shot('01-title');
 
   console.log('\n== New game & prologue cutscene ==');
@@ -386,13 +390,146 @@ function ok(cond, msg) {
   const endParas = await page.locator('#ending-text p').count();
   ok(endParas === 4, 'epilogue has 4 paragraphs');
 
-  console.log('\n== Post-game ==');
+  console.log('\n== Post-game & Chapter Two unlock ==');
+  await page.waitForTimeout(1800); // let the unlock banner fade in
+  ok(await page.locator('.unlock-banner').isVisible(), 'ending announces Chapter Two unlock');
   await page.locator('#btn-again').click();
   await page.waitForTimeout(400);
   ok(await page.locator('#title-screen').isVisible(), 'back to title');
   ok(await page.locator('#btn-continue').isHidden(), 'save cleared after finishing');
+  ok(await page.locator('#lock-ch2').isHidden(), 'Chapter Two no longer locked');
+  ok(await page.locator('#btn-new-ch2').isVisible(), 'Chapter Two can now be started');
+  ok((await page.locator('#card-ch1 .chapter-done').textContent()).includes('solved'), 'Chapter One marked solved');
+  await shot('18-title-ch2-unlocked');
+
+  console.log('\n== CHAPTER TWO: The Silent Bell ==');
+  SAVEKEY = 'greyharbor_save_ch2_v1';
+  await page.locator('#btn-new-ch2').click();
+  await page.waitForTimeout(500);
+  ok(await page.locator('#prologue-screen').isVisible(), 'ch2 prologue plays');
+  const q1 = await page.locator('#prologue-caption').textContent();
+  ok(q1.includes('fog'), 'ch2 prologue slide 1 (the fog)');
+  await shot('19-ch2-prologue-1');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(350);
+  ok((await page.locator('#prologue-caption').textContent()).includes('ferry'), 'ch2 prologue slide 2 (the ferry)');
+  await shot('19-ch2-prologue-2');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(350);
+  ok((await page.locator('#prologue-caption').textContent()).includes('bell was silent'), 'ch2 prologue slide 3 (the bell)');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(500);
+  s = await state2();
+  ok(s.scene === 'lamp2', 'ch2 starts in the fogbound lamp room');
+  await shot('20-ch2-lamp');
+
+  // Alvar sends you out
+  await tap2('b_stairs');
+  ok((await captionText()).includes('Alvar called you'), 'cannot leave before hearing Alvar');
+  await tap2('b_alvar');
+  d = await advanceDialog();
+  ok(!d.closed && d.choices.length === 2, 'Alvar briefing offers a choice');
+  await pickChoice('What could silence');
+  d = await advanceDialog();
+  ok(d.closed, 'briefing complete');
+  s = await state2();
+  ok(s.flags.b_met === true && s.clues.includes('b_ferry'), 'mission accepted, ferry clue noted');
+
+  console.log('\n== The foggy shore ==');
+  await tap2('b_stairs');
+  s = await state2();
+  ok(s.scene === 'shore', 'took the shore path');
+  await shot('21-ch2-shore');
+  await tap2('b_notice');
+  await tap2('b_plaque2');
+  s = await state2();
+  ok(s.clues.includes('b_notice') && s.clues.includes('b_plaque'), 'shed-code clues collected');
+  await tap2('b_skiff');
+  ok((await captionText()).includes('drifting'), 'skiff refuses without oars');
+
+  // shed padlock: wrong year then 1957
+  await tap2('b_shed');
+  ok(await page.locator('#puzzle-overlay').isVisible(), 'padlock keypad opens');
+  for (const k of ['1', '1', '1', '1']) await page.locator('.key', { hasText: new RegExp('^' + k + '$') }).click();
+  await page.waitForTimeout(700);
+  s = await state2();
+  ok(!s.flags.b_shedOpen, 'wrong year keeps the shed shut');
+  for (const k of ['1', '9', '5', '7']) await page.locator('.key', { hasText: new RegExp('^' + k + '$') }).click();
+  await page.waitForTimeout(700);
+  s = await state2();
+  ok(s.flags.b_shedOpen === true, '1957 opens the shed');
+  ok(await page.evaluate(() => !!document.getElementById('sh-oars')), 'oars visible inside the open shed');
+  await tap2('b_shed');
+  s = await state2();
+  ok(s.inv.includes('oars'), 'took the oars');
+  ok(await page.evaluate(() => !document.getElementById('sh-oars')), 'oars art gone from the shed');
+  ok(await page.evaluate(() => !!document.getElementById('sh-boathook')), 'boathook on the shed wall');
+  await tap2('b_hook');
+  s = await state2();
+  ok(s.inv.includes('boathook'), 'took the boathook');
+  ok(await page.evaluate(() => !document.getElementById('sh-boathook')), 'boathook art gone from the wall');
+
+  console.log('\n== Bell Rock ==');
+  await tap2('b_skiff');
+  s = await state2();
+  ok(s.scene === 'bellrock', 'rowed out to Bell Rock');
+  await shot('22-ch2-bellrock');
+  await tap2('b_bell');
+  s = await state2();
+  ok(s.clues.includes('b_frayed'), 'found the frayed rope & missing chain');
+  await tap2('b_magpie2');
+  await tap2('b_nest');
+  s = await state2();
+  ok(s.clues.includes('b_magpie'), 'spotted the glittering nest');
+  ok(await page.evaluate(() => !!document.getElementById('br-glints')), 'nest glitters before looting');
+  await useItem('boathook', 'b_nest');
+  s = await state2();
+  ok(s.inv.includes('strikerchain'), 'recovered the striker chain');
+  ok(s.clues.includes('b_trinkets'), 'catalogued the thief\'s hoard');
+  ok(await page.evaluate(() => !document.getElementById('br-glints')), 'nest glitter gone after looting');
+  await useItem('strikerchain', 'b_bell');
+  s = await state2();
+  ok(s.flags.b_chainOn === true, 'chain hung back inside the bell');
+
+  console.log('\n== Ring the bell ==');
+  await tap2('b_bell');
+  ok(await page.locator('#bell-svg').isVisible(), 'bell-ringing puzzle opens');
+  await shot('23-ch2-bellpuzzle');
+  // deliberately pull at the wrong moment
+  await page.waitForFunction(() => document.getElementById('bell-svg').dataset.inzone === '0');
+  await page.locator('.bell-pull-btn').click();
+  ok((await page.locator('#puzzle-panel .solved-note').textContent()).includes('Too soon'), 'early pull is rejected');
+  ok(await page.evaluate(() => document.querySelectorAll('.bell-pip.hit').length === 0), 'no progress from a bad pull');
+  // now three good pulls, timed to the swing
+  for (let target = 1; target <= 3; target++) {
+    let done = false;
+    for (let tries = 0; tries < 15 && !done; tries++) {
+      await page.waitForFunction(() => document.getElementById('bell-svg') && document.getElementById('bell-svg').dataset.inzone === '1');
+      await page.locator('.bell-pull-btn').click();
+      done = await page.evaluate(t => document.querySelectorAll('.bell-pip.hit').length >= t, target);
+      if (!done) await page.waitForTimeout(250);
+    }
+    ok(done, 'good pull #' + target + ' lands');
+  }
+  await page.waitForTimeout(1400);
+  s = await state2();
+  ok(s.flags.b_bellRung === true, 'the fog bell rings');
+  d = await advanceDialog();
+  ok(d.closed, 'finale plays out');
+  await page.waitForTimeout(1500);
+  ok(await page.locator('#ending-screen').isVisible(), 'chapter two ending shows');
+  ok((await page.locator('#ending-title').textContent()) === 'The Bell Answers', 'ch2 ending title correct');
+  await page.waitForTimeout(6500);
+  ok(await page.locator('#ending-text p').count() === 4, 'ch2 epilogue has 4 paragraphs');
+  await shot('24-ch2-ending');
+  const meta = await page.evaluate(() => JSON.parse(localStorage.getItem('greyharbor_meta_v1')));
+  ok(meta.ch1Done === true && meta.ch2Done === true, 'both chapters recorded as finished');
+  await page.locator('#btn-again').click();
+  await page.waitForTimeout(400);
+  ok((await page.locator('#card-ch2 .chapter-done').textContent()).includes('solved'), 'Chapter Two marked solved on title');
 
   console.log('\n== Save/continue mid-game ==');
+  SAVEKEY = 'greyharbor_save_v1';
   await page.locator('#btn-new').click();
   await page.waitForTimeout(500);
   ok(await page.locator('#prologue-screen').isVisible(), 'prologue plays again on a fresh game');

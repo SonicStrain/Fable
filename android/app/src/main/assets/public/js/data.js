@@ -13,6 +13,10 @@ const Items = {
   cipherwheel:  { name: 'Cipher wheel',        icon: 'cipherwheel',  desc: 'Two brass rings of letters. Someone scratched "seven turns for seven seas" on the rim.' },
   oilcan:       { name: 'Oil can',             icon: 'oilcan',       desc: 'Half full of thick machine oil. Alvar kept everything running.' },
   crank:        { name: 'Winch crank',         icon: 'crank',        desc: 'An iron crank handle. It must fit some machine — a winch, maybe.' },
+  /* ---- chapter two ---- */
+  oars:         { name: 'Pair of oars',        icon: 'oars',         desc: 'Alvar\'s good spruce oars. "Row like you mean it," he always says.' },
+  boathook:     { name: 'Boathook',            icon: 'boathook',     desc: 'A long pole with a brass hook. For catching mooring lines — or reaching things that would rather not be reached.' },
+  strikerchain: { name: 'Striker chain',       icon: 'strikerchain', desc: 'The fog bell\'s silver striker chain, still tangled with a thief\'s treasure: a button, a ring-pull, and somebody\'s thimble.' },
 };
 
 /* ---------------- Clues ---------------- */
@@ -27,6 +31,13 @@ const Clues = {
   telescope:  { title: 'Through the telescope',text: 'A launch with no running lamps, riding low, creeping toward the black stretch of cliffs no beam ever touches.' },
   crate_mark: { title: 'Re-stamped crates',    text: 'Harbor-store crates, pried open and empty — every "GH" brand struck through and over-stamped with a crude V.' },
   cave_ledger:{ title: 'The smuggler\'s tally',text: 'A tally sheet in the cave: dates and tonnage. Every date matches a night the great light "failed".' },
+  /* ---- chapter two ---- */
+  b_ferry:    { title: 'The midnight ferry',   text: 'Marta\'s ferry rounds Bell Rock at midnight. In fog this thick, the light is useless — only the bell can warn her off the rocks.' },
+  b_notice:   { title: 'The notice board',     text: '"BOAT SHED — combination is the year the Great Storm took the old pier. If you don\'t know it, you haven\'t lived here long enough to borrow the skiff."' },
+  b_plaque:   { title: 'The jetty plaque',     text: '"REBUILT AFTER THE GREAT STORM — 1957."' },
+  b_frayed:   { title: 'The silent bell',      text: 'The bell rope is frayed to threads by the wind — and the silver striker chain is simply gone. Cut? No: the links were worked loose. Carried off.' },
+  b_magpie:   { title: 'The thief',            text: 'A magpie keeps circling the crag, scolding you. Its nest glitters with everything shiny it could lift — including, unmistakably, a silver chain.' },
+  b_trinkets: { title: 'A thief\'s hoard',     text: 'Besides the chain: a brass button, three ring-pulls, a thimble, and what appears to be Alvar\'s missing pipe-band. Case closed on that mystery, too.' },
 };
 
 /* ---------------- Objectives ---------------- */
@@ -45,6 +56,22 @@ function currentObjective(f) {
   }
   if (!f.foundAlvar)    return 'The gate is open. Enter the sea cave.';
   return 'See it through to the end.';
+}
+
+/* objective line for chapter two */
+function objective2(f) {
+  if (!f.b_met)        return 'Fog has swallowed the harbor and the fog bell is silent. Speak with Alvar in the lamp room.';
+  if (!f.b_shedOpen)   return 'Get into the boat shed by the jetty. The padlock wants a year — the notice board says the harbor remembers its worst night.';
+  if (!f.b_hasOars)    return 'Take the oars from the shed.';
+  if (!f.b_seenBell)   return 'Row the skiff out to Bell Rock.';
+  if (!f.b_nestLooted) {
+    let o = 'The striker chain was stolen — and the magpie\'s nest on the crag glitters. Get it back.';
+    if (!f.b_hasHook) o += ' You\'ll need something long to reach it; there was a boathook on the shed wall.';
+    return o;
+  }
+  if (!f.b_chainOn)    return 'Hang the striker chain back inside the bell.';
+  if (!f.b_bellRung)   return 'Ring the bell! Pull when the swing is at its highest — three strong pulls will wake her.';
+  return 'Listen.';
 }
 
 /* ---------------- Dialogue trees ---------------- */
@@ -131,9 +158,58 @@ const Dialogs = {
     text: 'Voss runs. Smugglers always do. But the tide he used for nine years has turned, the stair is slick, and the constable\'s men are already on the cliff path...',
     effect: g => g.endGame(),
     next: null },
+
+  /* ================= CHAPTER TWO ================= */
+  b_alvar1: { speaker: 'Alvar', portrait: 'alvar',
+    text: 'Kel. Look at it out there — fog like a fleece over the whole sea. I\'ve run the lamp to full and it just bounces the light back in my face.',
+    next: 'b_alvar2' },
+  b_alvar2: { speaker: 'Kel', portrait: 'kel',
+    text: 'The evening ferry\'s still out. Marta\'s aboard — she rounds Bell Rock at midnight.',
+    next: 'b_alvar3' },
+  b_alvar3: { speaker: 'Alvar', portrait: 'alvar',
+    text: 'Aye. And when light fails, sound serves. The fog bell on Bell Rock has warned ships off those teeth for eighty years. Tonight of all nights, she\'s silent as a held breath.',
+    next: 'b_alvar_choice' },
+  b_alvar_choice: { speaker: 'Alvar', portrait: 'alvar',
+    text: 'He looks at you the way he looks at weather he doesn\'t like — and waits.',
+    choices: [
+      { label: '"What could silence a bell like that?"', next: 'b_alvar4' },
+      { label: '"I\'ll go. Tell me how."', next: 'b_alvar5' },
+    ] },
+  b_alvar4: { speaker: 'Alvar', portrait: 'alvar',
+    text: 'Wind, rust, or thieves — and on a bare rock a mile out? Could be all three at once. Whatever it is, it must be *undone* before midnight.',
+    next: 'b_alvar5' },
+  b_alvar5: { speaker: 'Alvar', portrait: 'alvar',
+    text: 'I can\'t leave the lamp in this soup. So it\'s you, Kel. Take the shore path down — my skiff\'s by the boat shed. And Kel... row like you mean it.',
+    effect: g => { g.setFlag('b_met'); g.addClue('b_ferry'); },
+    next: null },
+  b_alvar_again: { speaker: 'Alvar', portrait: 'alvar',
+    text: 'Midnight comes on the tide\'s own clock, Kel — it doesn\'t wait for anyone\'s nerves. The skiff, the shed, Bell Rock. Go.',
+    next: null },
+
+  /* finale */
+  b_end1: { speaker: '', portrait: 'narrator',
+    text: 'DONG. The sound rolls out across the water, deep as a whale\'s heartbeat — once, twice, three times — and the fog itself seems to flinch.',
+    next: 'b_end2' },
+  b_end2: { speaker: '', portrait: 'narrator',
+    text: 'Silence. Then, far out in the white... a horn answers. Long, low, and turning away from the rocks.',
+    next: 'b_end3' },
+  b_end3: { speaker: 'Marta', portrait: 'marta',
+    text: '(faint, carried over the water) "...THAT\'S my bell! HA! Somebody put the harbor back where I left it!"',
+    next: 'b_end4' },
+  b_end4: { speaker: '', portrait: 'narrator',
+    text: 'Out of the fog come lights — a whole string of warm windows gliding safely wide of Bell Rock. On the crag above, one very indignant magpie files a formal complaint.',
+    effect: g => g.endGame(),
+    next: null },
 };
 
-/* ---------------- Ending epilogue ---------------- */
+/* ---------------- Ending epilogues ---------------- */
+const EndingText2 = [
+  'The ferry tied up twenty minutes past midnight, and Marta stepped off it arguing with the gangplank. She had brought back city tea, city gossip, and absolutely no patience for either.',
+  'The magpie kept the button, the ring-pulls, and the thimble. Alvar kept his recovered pipe-band, and told everyone at the harbor inn that his apprentice "rows nearly as well as a keeper should."',
+  'The bell got a new rope, a magpie-proof cage for her chain, and a coat of wax. On foggy nights her voice rolls out across the water, and ships answer her by name.',
+  'And if you listen on clear nights, very carefully, you can hear a small, glittering thief ringing something high on the crag. Everyone needs a bell of their own.',
+];
+
 const EndingText = [
   'They pulled Voss off the rocks at dawn, soaked and swearing, his launch impounded with forty crates of untaxed cargo. The ledger — and Alvar\'s patient copies — did the rest.',
   'Uncle Alvar climbed his hundred and eighteen steps that same evening and lit the lamp himself. Marta brought chowder up the hill, "seeing as nobody in this family can be trusted to eat."',
@@ -141,7 +217,7 @@ const EndingText = [
   'And if the cottage clock still reads 7:25 — well. Some lies are worth keeping, twice a day.',
 ];
 
-/* ---------------- Prologue (cinematic intro) ---------------- */
+/* ---------------- Prologues (cinematic intros) ---------------- */
 const Prologue = [
   { art: () => Art.prologue(1),
     text: 'Uncle Alvar\'s letters arrived every month for nine years. Then, three weeks ago — nothing.' },
@@ -149,6 +225,15 @@ const Prologue = [
     text: 'His last letter ended mid-sentence, the ink trailing into a blot.' },
   { art: () => Art.prologue(3),
     text: 'You took the first boat north — to cold spray, gull-cries, and a light that turns without its keeper.' },
+];
+
+const Prologue2 = [
+  { art: () => Art.prologue2(1),
+    text: 'Winter came to Grey Harbor, and one evening the white fog came with it — swallowing the sea, the town, and the light itself.' },
+  { art: () => Art.prologue2(2),
+    text: 'Somewhere out in that white, the midnight ferry was feeling her way home. Marta was aboard.' },
+  { art: () => Art.prologue2(3),
+    text: 'Ships trust the fog bell of Bell Rock when they can trust nothing else. Tonight, for the first time in eighty years... the bell was silent.' },
 ];
 
 /* ---------------- Scenes ---------------- */
@@ -368,8 +453,163 @@ const Scenes = {
   },
 };
 
+/* ================= CHAPTER TWO SCENES ================= */
+
+Scenes.lamp2 = {
+  name: 'The Lamp Room',
+  mood: 'fog',
+  art: () => Art.lamp(true),
+  hotspots: [
+    { id: 'b_alvar', label: 'Alvar', rect: [560, 470, 180, 290],
+      onTap: g => g.dialog(g.flag('b_met') ? 'b_alvar_again' : 'b_alvar1') },
+    { id: 'b_lens', label: 'The great lens', rect: [270, 340, 260, 430],
+      onTap: g => g.say('The lens burns at full trim — and the fog just hands the light straight back. Like shouting into a pillow.') },
+    { id: 'b_windows', label: 'The fog', rect: [60, 120, 680, 200],
+      onTap: g => g.say('White, moving, absolute. Somewhere under it: the sea, the rocks, and one ferry that thinks it knows the way.') },
+    { id: 'b_stairs', label: 'Stairs down', rect: [255, 990, 290, 170],
+      onTap: g => {
+        if (!g.flag('b_met')) { g.say('Alvar called you up here for a reason. Hear him out first.'); return; }
+        g.goto('shore', 'Down the spiral stairs and along the shore path, into the wool-thick white.');
+      } },
+  ],
+};
+
+Scenes.shore = {
+  name: 'The Foggy Shore',
+  mood: 'fog',
+  art: f => Art.shore(f),
+  hotspots: [
+    { id: 'b_shed', label: 'Boat shed', rect: [150, 600, 220, 210],
+      onTap: g => {
+        if (!g.flag('b_shedOpen')) { g.puzzle('shedlock'); return; }
+        if (!g.flag('b_hasOars')) {
+          g.setFlag('b_hasOars'); g.addItem('oars'); g.refresh();
+          g.say('Inside: nets, floats, tar — and Alvar\'s good spruce oars, right where he said.');
+          return;
+        }
+        g.say('Nets, floats, and the smell of tar. You have what you came for.');
+      } },
+    { id: 'b_hook', label: 'Boathook', rect: [120, 660, 80, 160],
+      visible: f => !f.b_hasHook,
+      onTap: g => {
+        g.setFlag('b_hasHook'); g.addItem('boathook'); g.refresh();
+        g.say('You lift the long boathook off its pegs. Good for mooring lines, gutters, and arguments you\'d rather have at a distance.');
+      } },
+    { id: 'b_notice', label: 'Notice board', rect: [455, 490, 150, 180],
+      onTap: g => { g.addClue('b_notice');
+        g.say('Among the tide tables: "BOAT SHED — combination is the year the Great Storm took the old pier. If you don\'t know it, you haven\'t lived here long enough to borrow the skiff."'); } },
+    { id: 'b_plaque2', label: 'Jetty plaque', rect: [600, 830, 130, 130],
+      onTap: g => { g.addClue('b_plaque');
+        g.say('A weathered plaque on the jetty post: "REBUILT AFTER THE GREAT STORM — 1957."'); } },
+    { id: 'b_skiff', label: 'The skiff', rect: [100, 970, 230, 130],
+      onTap: g => {
+        if (!g.flag('b_hasOars')) { g.say('Alvar\'s skiff, patient at her line. Rowing without oars is called drifting, and drifting in fog is called a shipwreck.'); return; }
+        g.goto('bellrock', 'You pull hard through the white. Twice something groans in the fog. On the third groan, Bell Rock rises out of it.');
+      } },
+    { id: 'b_pots', label: 'Crab pots', rect: [600, 1040, 170, 130],
+      onTap: g => g.say('A stack of crab pots. One crab, still in residence, gives you a look of profound legal confidence.') },
+    { id: 'b_fog', label: 'The water', rect: [420, 740, 340, 180],
+      onTap: g => g.say('You can hear the sea better than you can see it. Somewhere out there, a ferry is listening for a bell that isn\'t ringing.') },
+    { id: 'b_uppath', label: 'Path up to the light', rect: [20, 620, 130, 200],
+      onTap: g => g.goto('lamp2') },
+  ],
+};
+
+Scenes.bellrock = {
+  name: 'Bell Rock',
+  mood: 'cliffs',
+  art: f => Art.bellrock(f),
+  hotspots: [
+    { id: 'b_bell', label: 'The fog bell', rect: [330, 540, 200, 350],
+      onTap: g => {
+        g.setFlag('b_seenBell');
+        if (g.flag('b_bellRung')) { g.say('She swings and sings, eighty years young.'); return; }
+        if (g.flag('b_chainOn')) { g.puzzle('bellring'); return; }
+        g.addClue('b_frayed'); g.refresh();
+        g.say('There she hangs, bronze and patient — but the pull-rope is frayed to wool by the wind, and the silver striker chain is GONE. Not snapped: worked loose, link by link, and carried off.');
+      },
+      onItem: { strikerchain: g => {
+        if (!g.flag('b_chainOn')) {
+          g.setFlag('b_chainOn'); g.removeItem('strikerchain'); g.refresh();
+          g.say('You climb the tower steps and hang the chain back on its hook inside her dark bronze mouth. The striker swings true. Now — ring her.');
+        }
+      } } },
+    { id: 'b_nest', label: 'Glittering nest', rect: [140, 420, 140, 140],
+      onTap: g => {
+        g.setFlag('b_seenBell');
+        if (g.flag('b_nestLooted')) { g.say('Sticks, fluff, and honest trinkets. You left the museum its exhibits.'); return; }
+        g.addClue('b_magpie');
+        g.say('High on the crag, out of reach: a nest absolutely FULL of glitter — and hanging off one side, unmistakably, a silver chain. The thief has taste.');
+      },
+      onItem: { boathook: g => {
+        if (g.flag('b_nestLooted')) { g.say('Leave the rest. Even thieves get to keep something.'); return; }
+        g.setFlag('b_nestLooted'); g.addItem('strikerchain'); g.addClue('b_trinkets'); g.refresh();
+        g.say('You reach the boathook up, hook the chain, and lift it free — to a storm of magpie outrage. The rest of the hoard you leave: a button, three ring-pulls, a thimble, and Alvar\'s long-lost pipe-band.');
+      } } },
+    { id: 'b_magpie2', label: 'The magpie', rect: [200, 260, 200, 140],
+      onTap: g => {
+        const lines = [
+          'The magpie circles, scolding you in fluent Corvid. You gather you are the villain of this story.',
+          '"CHAKKA-CHAKKA-CHAK!" — which, roughly translated, means see you in court.',
+          'It lands, glares, and polishes one ring-pull pointedly.',
+        ];
+        g.say(lines[Math.floor(Math.random() * lines.length)]);
+      } },
+    { id: 'b_pool2', label: 'Tide pool', rect: [540, 1000, 200, 120],
+      onTap: g => g.say('Mussels stacked like cobblestones, and one anemone waving at nothing. The tide is coming in — and midnight with it.') },
+    { id: 'b_back', label: 'The skiff', rect: [60, 950, 210, 140],
+      onTap: g => g.goto('shore', 'You row back toward the one lantern glowing through the fog.') },
+  ],
+};
+
+/* ---------------- Chapters ---------------- */
+const Chapters = {
+  ch1: {
+    label: 'Chapter One',
+    name: 'The Keeper of Grey Harbor',
+    saveKey: 'greyharbor_save_v1',
+    start: 'dock',
+    prologue: Prologue,
+    objective: currentObjective,
+    ending: { title: 'The Light Endures', text: EndingText, art: () => Art.ending() },
+  },
+  ch2: {
+    label: 'Chapter Two',
+    name: 'The Silent Bell',
+    saveKey: 'greyharbor_save_ch2_v1',
+    start: 'lamp2',
+    requires: 'ch1',
+    lockHint: 'Finish Chapter One to unlock',
+    prologue: Prologue2,
+    objective: objective2,
+    ending: { title: 'The Bell Answers', text: EndingText2, art: () => Art.ending2() },
+  },
+};
+
 /* ---------------- Puzzles ---------------- */
 const Puzzles = {
+  shedlock: {
+    type: 'keypad',
+    title: 'The Boat Shed Padlock',
+    sub: '"...the year the Great Storm took the old pier."',
+    code: '1957',
+    wrongText: 'The padlock stays shut. Wrong year.',
+    onSolve: g => {
+      g.setFlag('b_shedOpen');
+      g.say('1-9-5-7. The padlock drops open like it was waiting. The shed breathes out tar and old rope.');
+    },
+  },
+  bellring: {
+    type: 'bell',
+    title: 'Ring the Fog Bell',
+    sub: 'Pull the chain when the swing reaches its highest — the gold marks. Three strong pulls will wake her voice.',
+    pulls: 3,
+    onSolve: g => {
+      g.setFlag('b_bellRung');
+      g.refresh();
+      setTimeout(() => g.dialog('b_end1'), 600);
+    },
+  },
   drawer: {
     type: 'keypad',
     title: 'The Letter Lock',

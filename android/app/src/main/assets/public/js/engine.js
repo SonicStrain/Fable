@@ -6,8 +6,18 @@
 'use strict';
 
 (() => {
-  const SAVE_KEY = 'greyharbor_save_v1';
+  const META_KEY = 'greyharbor_meta_v1'; // cross-chapter progress (unlocks)
   const $ = id => document.getElementById(id);
+
+  let chapterId = 'ch1';
+  const chapterCfg = () => Chapters[chapterId];
+
+  function loadMeta() {
+    try { return JSON.parse(localStorage.getItem(META_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveMeta(m) {
+    try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch (e) {}
+  }
 
   const el = {
     title: $('title-screen'), game: $('game-screen'), ending: $('ending-screen'),
@@ -28,21 +38,23 @@
   let captionTimer = null;
   let toastTimer = null;
 
-  /* ---------------- state & save ---------------- */
+  /* ---------------- state & save (one save per chapter) ---------------- */
   function freshState() {
-    return { v: 1, scene: 'dock', inv: [], flags: {}, clues: [], introDone: false };
+    return { v: 1, chapter: chapterId, scene: chapterCfg().start, inv: [], flags: {}, clues: [], introDone: false };
   }
 
   function save() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) { /* private mode: play on */ }
+    try { localStorage.setItem(chapterCfg().saveKey, JSON.stringify(state)); } catch (e) { /* private mode: play on */ }
   }
 
-  function loadSave() {
+  function loadSave(ch) {
     try {
-      const raw = localStorage.getItem(SAVE_KEY);
+      const cfg = Chapters[ch || chapterId];
+      const raw = localStorage.getItem(cfg.saveKey);
       if (!raw) return null;
       const s = JSON.parse(raw);
       if (!s || s.v !== 1 || !Scenes[s.scene]) return null;
+      s.chapter = ch || chapterId;
       s.inv = (s.inv || []).filter(id => Items[id]);
       s.clues = (s.clues || []).filter(id => Clues[id]);
       s.flags = s.flags || {};
@@ -50,8 +62,8 @@
     } catch (e) { return null; }
   }
 
-  function clearSave() {
-    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  function clearSave(ch) {
+    try { localStorage.removeItem(Chapters[ch || chapterId].saveKey); } catch (e) {}
   }
 
   /* ---------------- engine API given to data handlers ---------------- */
@@ -104,15 +116,59 @@
 
   function showTitle() {
     el.titleArt.innerHTML = Art.title();
-    const s = loadSave();
-    const btn = $('btn-continue');
-    btn.classList.toggle('hidden', !s);
-    if (s) btn.textContent = 'Continue — ' + Scenes[s.scene].name;
+    buildChapterList();
     show(el.title);
     Music.setScene('title');
   }
 
-  function startGame(fresh) {
+  function buildChapterList() {
+    const meta = loadMeta();
+    const list = $('chapter-list');
+    list.innerHTML = '';
+    Object.keys(Chapters).forEach(id => {
+      const c = Chapters[id];
+      const locked = c.requires && !meta[c.requires + 'Done'];
+      const card = document.createElement('div');
+      card.className = 'chapter-card' + (locked ? ' locked' : '');
+      card.id = 'card-' + id;
+      const done = meta[id + 'Done'] ? '<span class="chapter-done">✓ solved</span>' : '';
+      card.innerHTML = '<span class="chapter-label">' + c.label + done + '</span><h3>' + c.name + '</h3>';
+      if (locked) {
+        const p = document.createElement('p');
+        p.className = 'chapter-lock';
+        p.id = 'lock-' + id;
+        p.textContent = '🔒 ' + c.lockHint;
+        card.appendChild(p);
+      } else {
+        const btns = document.createElement('div');
+        btns.className = 'chapter-btns';
+        const s = loadSave(id);
+        if (s) {
+          const cont = document.createElement('button');
+          cont.className = 'btn btn-primary';
+          cont.id = id === 'ch1' ? 'btn-continue' : 'btn-continue-' + id;
+          cont.textContent = 'Continue — ' + Scenes[s.scene].name;
+          cont.addEventListener('click', () => startGame(false, id));
+          btns.appendChild(cont);
+        }
+        const nw = document.createElement('button');
+        nw.className = 'btn' + (s ? '' : ' btn-primary');
+        nw.id = id === 'ch1' ? 'btn-new' : 'btn-new-' + id;
+        nw.textContent = s ? 'Restart' : 'New Game';
+        nw.addEventListener('click', () => {
+          if (loadSave(id) && !window.confirm('Start ' + c.label + ' over? Its saved progress will be erased.')) return;
+          clearSave(id);
+          startGame(true, id);
+        });
+        btns.appendChild(nw);
+        card.appendChild(btns);
+      }
+      list.appendChild(card);
+    });
+  }
+
+  function startGame(fresh, ch) {
+    chapterId = ch || chapterId || 'ch1';
     if (fresh) { state = freshState(); save(); }
     else { state = loadSave() || freshState(); }
     selectedItem = null;
@@ -139,7 +195,7 @@
 
   function paintPrologue() {
     clearTimeout(prologueTimer);
-    const s = Prologue[prologueSlide];
+    const s = chapterCfg().prologue[prologueSlide];
     el.prologueArt.innerHTML = s.art();
     // retrigger the caption entrance animation
     const cap = el.prologueCaption;
@@ -152,18 +208,24 @@
 
   function nextPrologue() {
     prologueSlide++;
-    if (prologueSlide >= Prologue.length) enterGame();
+    if (prologueSlide >= chapterCfg().prologue.length) enterGame();
     else paintPrologue();
   }
 
   function showEnding() {
     closeAllOverlays();
-    el.endingArt.innerHTML = Art.ending();
+    const cfg = chapterCfg().ending;
+    const meta = loadMeta();
+    const unlocksCh2 = chapterId === 'ch1' && !meta.ch1Done;
+    meta[chapterId + 'Done'] = true;
+    saveMeta(meta);
+    el.endingArt.innerHTML = cfg.art();
+    $('ending-title').textContent = cfg.title;
     el.endingText.innerHTML = '';
     show(el.ending);
     Music.setScene('ending');
     clearSave();
-    EndingText.forEach((p, i) => {
+    cfg.text.forEach((p, i) => {
       const par = document.createElement('p');
       par.textContent = p;
       par.style.opacity = '0';
@@ -172,13 +234,22 @@
       el.endingText.appendChild(par);
       setTimeout(() => { par.style.opacity = '1'; }, 600 + i * 1500);
     });
+    if (unlocksCh2) {
+      const b = document.createElement('div');
+      b.className = 'unlock-banner';
+      b.textContent = '✦ Chapter Two unlocked: ' + Chapters.ch2.name;
+      b.style.opacity = '0';
+      b.style.transition = 'opacity 1.2s ease';
+      el.endingText.appendChild(b);
+      setTimeout(() => { b.style.opacity = '1'; }, 600 + cfg.text.length * 1500);
+    }
   }
 
   /* ---------------- scene rendering ---------------- */
   function renderScene() {
     const scene = Scenes[state.scene];
     el.sceneName.textContent = scene.name;
-    Music.setScene(state.scene);
+    Music.setScene(scene.mood || state.scene);
     el.stage.innerHTML = scene.art(state.flags);
     const svg = el.stage.querySelector('svg');
     if (!svg) return;
@@ -351,7 +422,7 @@
 
   /* ---------------- journal ---------------- */
   function openJournal() {
-    el.objectiveBox.innerHTML = '<b>Current objective</b>' + escapeHtml(currentObjective(state.flags));
+    el.objectiveBox.innerHTML = '<b>Current objective</b>' + escapeHtml(chapterCfg().objective(state.flags));
     el.clueList.innerHTML = '';
     if (!state.clues.length) {
       el.clueList.innerHTML = '<p class="no-clues">No notes yet. Poke around; talk to people.</p>';
@@ -394,6 +465,7 @@
     if (p.type === 'keypad') buildKeypad(p);
     else if (p.type === 'cipher') buildCipher(p);
     else if (p.type === 'lens') buildLens(p);
+    else if (p.type === 'bell') buildBell(p);
 
     el.puzzleOverlay.classList.remove('hidden');
   }
@@ -604,6 +676,87 @@
     el.puzzlePanel.appendChild(note);
   }
 
+  /* bell ringing: pull the chain at the top of the swing */
+  function buildBell(p) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 300 260');
+    svg.setAttribute('id', 'bell-svg');
+    svg.innerHTML =
+      '<path d="M60,40 L240,40" stroke="#33291a" stroke-width="12" stroke-linecap="round"/>' +
+      '<path d="M70,208 A116,116 0 0 1 230,208" fill="none" stroke="#26314a" stroke-width="7" stroke-linecap="round"/>' +
+      // gold zones at the extremes of the swing
+      '<path id="zoneL" d="M70,206 A118,118 0 0 1 92,146" fill="none" stroke="#9a7a3a" stroke-width="9" stroke-linecap="round"/>' +
+      '<path id="zoneR" d="M208,146 A118,118 0 0 1 230,206" fill="none" stroke="#9a7a3a" stroke-width="9" stroke-linecap="round"/>' +
+      '<circle cx="150" cy="52" r="8" fill="#6a5f48"/>';
+
+    const bellG = document.createElementNS(NS, 'g');
+    bellG.innerHTML =
+      '<path d="M150,52 L150,84" stroke="#8a7a5c" stroke-width="6"/>' +
+      '<path d="M118,168 Q114,96 150,88 Q186,96 182,168 L190,178 Q150,192 110,178 Z" fill="#c9a24a"/>' +
+      '<path d="M118,168 Q114,96 150,88 L150,186 Q130,186 110,178 Z" fill="#e0c06a" opacity=".5"/>' +
+      '<path d="M150,178 L150,200" stroke="#d9d2c0" stroke-width="4"/>' +
+      '<circle cx="150" cy="206" r="9" fill="#b8b2a0"/>';
+    bellG.style.transformOrigin = '150px 52px';
+    svg.appendChild(bellG);
+    el.puzzlePanel.appendChild(svg);
+
+    const pips = document.createElement('div');
+    pips.className = 'bell-progress';
+    const pipEls = [];
+    for (let i = 0; i < p.pulls; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'bell-pip';
+      pips.appendChild(pip); pipEls.push(pip);
+    }
+    el.puzzlePanel.appendChild(pips);
+
+    const note = document.createElement('div');
+    note.className = 'solved-note';
+    el.puzzlePanel.appendChild(note);
+
+    const actions = document.createElement('div');
+    actions.className = 'puzzle-actions';
+    const pull = document.createElement('button');
+    pull.className = 'btn btn-primary bell-pull-btn';
+    pull.textContent = 'PULL';
+    actions.appendChild(pull);
+    el.puzzlePanel.appendChild(actions);
+
+    const zoneL = svg.querySelector('#zoneL'), zoneR = svg.querySelector('#zoneR');
+    let hits = 0, running = true;
+    const t0 = performance.now();
+    const PERIOD = 2100, MAXDEG = 38;
+
+    function frame(now) {
+      if (!running || !document.body.contains(svg)) return;
+      const phase = Math.sin((now - t0) / PERIOD * Math.PI * 2);
+      bellG.style.transform = 'rotate(' + (phase * MAXDEG).toFixed(2) + 'deg)';
+      const inzone = Math.abs(phase) > 0.82;
+      svg.dataset.inzone = inzone ? '1' : '0';
+      zoneL.setAttribute('stroke', inzone && phase < 0 ? '#e8b44a' : '#9a7a3a');
+      zoneR.setAttribute('stroke', inzone && phase > 0 ? '#e8b44a' : '#9a7a3a');
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    pull.addEventListener('click', () => {
+      if (!running) return;
+      if (svg.dataset.inzone === '1') {
+        hits++;
+        pipEls[hits - 1].classList.add('hit');
+        Music.bell(hits);
+        note.textContent = ['A deep bronze hum...', 'She\'s waking up...', 'DONG!'][Math.min(hits - 1, 2)];
+        if (hits >= p.pulls) {
+          running = false;
+          setTimeout(() => solvePuzzle(p), 900);
+        }
+      } else {
+        note.textContent = 'Too soon — pull when the swing reaches the gold.';
+      }
+    });
+  }
+
   /* ---------------- overlays / chrome ---------------- */
   function closeAllOverlays() {
     [el.dialogOverlay, el.journalOverlay, el.puzzleOverlay, el.menuOverlay, el.howtoOverlay]
@@ -623,12 +776,6 @@
   function init() {
     showTitle();
 
-    $('btn-new').addEventListener('click', () => {
-      if (loadSave() && !window.confirm('Start over? Your saved investigation will be erased.')) return;
-      clearSave();
-      startGame(true);
-    });
-    $('btn-continue').addEventListener('click', () => startGame(false));
     $('btn-again').addEventListener('click', () => { showTitle(); });
 
     $('btn-menu').addEventListener('click', () => el.menuOverlay.classList.remove('hidden'));
@@ -640,10 +787,10 @@
       el.howtoOverlay.classList.remove('hidden');
     });
     $('btn-restart').addEventListener('click', () => {
-      if (!window.confirm('Restart the story from the beginning?')) return;
+      if (!window.confirm('Restart this chapter from the beginning?')) return;
       clearSave();
       el.menuOverlay.classList.add('hidden');
-      startGame(true);
+      startGame(true, chapterId);
     });
     $('btn-save-exit').addEventListener('click', () => {
       save(); // belt & braces: progress is already saved on every change

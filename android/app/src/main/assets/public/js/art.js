@@ -25,6 +25,27 @@ const Art = (() => {
     return `<g id="${prefix}-stars">${s}</g>`;
   }
 
+  /* drifting fog banks (chapter two weather) */
+  function fogBands(prefix, opacity) {
+    const o = opacity || .45;
+    return `<g pointer-events="none">
+      <g opacity="${o}">
+        <animateTransform attributeName="transform" type="translate" values="-90,0;90,0;-90,0" dur="30s" repeatCount="indefinite"/>
+        <ellipse cx="300" cy="430" rx="480" ry="70" fill="#c9d2e0" opacity=".35"/>
+        <ellipse cx="700" cy="520" rx="420" ry="55" fill="#b8c2d4" opacity=".3"/>
+      </g>
+      <g opacity="${o}">
+        <animateTransform attributeName="transform" type="translate" values="80,0;-80,0;80,0" dur="41s" repeatCount="indefinite"/>
+        <ellipse cx="180" cy="700" rx="460" ry="80" fill="#cfd8e6" opacity=".32"/>
+        <ellipse cx="640" cy="820" rx="500" ry="66" fill="#b8c2d4" opacity=".28"/>
+      </g>
+      <g opacity="${o}">
+        <animateTransform attributeName="transform" type="translate" values="-60,0;60,0;-60,0" dur="53s" repeatCount="indefinite"/>
+        <ellipse cx="420" cy="980" rx="520" ry="90" fill="#c9d2e0" opacity=".3"/>
+      </g>
+    </g>`;
+  }
+
   /* small helper: person silhouette (standing) */
   function figure(x, y, h, color, opts = {}) {
     const s = h / 100;
@@ -433,8 +454,8 @@ const Art = (() => {
     return wrap(defs, body);
   }
 
-  /* ------------------------------------------------ LAMP ROOM */
-  function lamp() {
+  /* ------------------------------------------------ LAMP ROOM (fogNight: chapter two) */
+  function lamp(fogNight) {
     const defs = `
       <linearGradient id="lp-nightsea" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#0a1024"/><stop offset="62%" stop-color="#18234a"/><stop offset="66%" stop-color="#0c1530"/><stop offset="100%" stop-color="#060b1a"/>
@@ -450,15 +471,31 @@ const Art = (() => {
         <stop offset="0%" stop-color="#3d3222"/><stop offset="100%" stop-color="#1c150c"/>
       </linearGradient>`;
 
-    const body = `
-      <!-- panoramic windows -->
+    const windows = fogNight ? `
+      <rect width="800" height="820" fill="#3d4656"/>
+      <rect width="800" height="820" fill="#2c3442" opacity=".6"/>
+      ${fogBands('lpf', .8)}
+      <g opacity=".25" fill="#dfe6f2">
+        <ellipse cx="200" cy="240" rx="300" ry="60"><animate attributeName="opacity" values=".25;.1;.25" dur="9s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="620" cy="360" rx="340" ry="70"><animate attributeName="opacity" values=".1;.28;.1" dur="12s" repeatCount="indefinite"/></ellipse>
+      </g>` : `
       <rect width="800" height="820" fill="url(#lp-nightsea)"/>
       ${stars(20, 99, 380, 'lp')}
       <circle cx="140" cy="200" r="34" fill="#e9edf8" opacity=".95"/>
       <g opacity=".5" stroke="#39518c" stroke-width="2" fill="none">
         <path d="M60,560 q40,-6 80,0 t76,0"><animate attributeName="opacity" values=".5;.15;.5" dur="5s" repeatCount="indefinite"/></path>
         <path d="M480,600 q44,-7 90,0 t80,0"><animate attributeName="opacity" values=".15;.5;.15" dur="6s" repeatCount="indefinite"/></path>
-      </g>
+      </g>`;
+
+    const alvar = fogNight ? `
+      <g transform="translate(645,690)">
+        ${figure(0, -160, 210, '#26314a', { cap: '#1a2338', extra: `
+          <path d="M-9,30 L-26,20" stroke="#26314a" stroke-width="6" fill="none"/>` })}
+      </g>` : '';
+
+    const body = `
+      <!-- panoramic windows -->
+      ${windows}
       <!-- window mullions -->
       <g stroke="#241d12" stroke-width="26">
         <path d="M100,0 L100,820 M370,0 L370,820 M640,0 L640,820"/>
@@ -510,6 +547,7 @@ const Art = (() => {
           <circle cx="0" cy="-104" r="7" fill="#bfe0ff" opacity=".9"/>
         </g>
       </g>
+      ${alvar}
       <!-- stair hatch -->
       <g transform="translate(400,1080)">
         <ellipse cx="0" cy="0" rx="150" ry="52" fill="#0d0906"/>
@@ -685,6 +723,419 @@ const Art = (() => {
         <path d="M-96,-6 Q0,30 100,-10 L80,26 Q0,48 -74,28 Z" fill="#2c2033"/>
         <path d="M-96,-6 Q0,26 100,-10 L96,-2 Q0,34 -90,2 Z" fill="#54394a"/>
         <path d="M-30,4 L-64,-34" stroke="#3a2b3f" stroke-width="6" stroke-linecap="round"/>
+      </g>`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ FOGGY SHORE (ch2) */
+  function shore(f = {}) {
+    const defs = `
+      <linearGradient id="sh-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2c3442"/><stop offset="60%" stop-color="#48525f"/><stop offset="100%" stop-color="#5a6470"/>
+      </linearGradient>
+      <linearGradient id="sh-sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4a5461"/><stop offset="100%" stop-color="#242c38"/>
+      </linearGradient>
+      ${lanternGlow(0, 0, 0, 'sh-glow')}`;
+
+    const body = `
+      <rect width="800" height="760" fill="url(#sh-sky)"/>
+      <rect y="760" width="800" height="440" fill="url(#sh-sea)"/>
+      <g opacity=".4" stroke="#8a99ad" stroke-width="2" fill="none">
+        <path d="M120,830 q40,-6 82,0 t74,0"><animate attributeName="opacity" values=".4;.12;.4" dur="5s" repeatCount="indefinite"/></path>
+        <path d="M430,900 q44,-7 90,0 t80,0"><animate attributeName="opacity" values=".12;.4;.12" dur="6.4s" repeatCount="indefinite"/></path>
+      </g>
+      <!-- boat shed -->
+      <g transform="translate(255,560)">
+        <path d="M-135,240 L135,240 L135,40 L-135,40 Z" fill="#3d3630"/>
+        <path d="M-155,46 L0,-64 L155,46 Z" fill="#2a2521"/>
+        <g stroke="#2a2521" stroke-width="4" opacity=".6">
+          <path d="M-135,90 H135 M-135,140 H135 M-135,190 H135"/>
+        </g>
+        <!-- big door with padlock -->
+        <rect x="-72" y="80" width="144" height="160" fill="#31261c"/>
+        <path d="M-72,80 L72,240 M72,80 L-72,240" stroke="#241c12" stroke-width="9"/>
+        <rect x="-72" y="80" width="144" height="160" fill="none" stroke="#241c12" stroke-width="8"/>
+        ${f.b_shedOpen ? `
+        <rect x="-64" y="88" width="128" height="152" fill="#120d07"/>
+        ${f.b_hasOars ? '' : `<g id="sh-oars" transform="translate(-6,150) rotate(12)">
+          <rect x="-6" y="-95" width="9" height="150" rx="4" fill="#8a7a5c"/>
+          <path d="M-6,-95 Q-20,-118 -2,-128 Q12,-116 3,-93 Z" fill="#8a7a5c"/>
+          <rect x="14" y="-88" width="9" height="145" rx="4" fill="#7a6a4e"/>
+          <path d="M14,-88 Q2,-112 18,-121 Q32,-108 23,-86 Z" fill="#7a6a4e"/>
+        </g>`}` : `
+        <g id="sh-padlock" transform="translate(0,158)">
+          <path d="M-13,-6 a13,13 0 0 1 26,0" fill="none" stroke="#9aa2b2" stroke-width="6"/>
+          <rect x="-17" y="-6" width="34" height="30" rx="6" fill="#7a8494"/>
+          <circle cx="0" cy="8" r="5" fill="#3d4656"/>
+        </g>`}
+        <!-- lantern on shed -->
+        <g transform="translate(112,52)">
+          <circle cx="0" cy="10" r="80" fill="url(#sh-glow)"/>
+          <rect x="-9" y="-6" width="18" height="26" rx="4" fill="#1a140b" stroke="#0d0a06" stroke-width="2"/>
+          <rect x="-5" y="-1" width="10" height="16" fill="#ffd98a"><animate attributeName="opacity" values="1;.7;1" dur="2.6s" repeatCount="indefinite"/></rect>
+        </g>
+        <!-- boathook on the wall -->
+        ${f.b_hasHook ? `<g id="sh-hookpegs"><circle cx="-108" cy="120" r="4" fill="#241c12"/><circle cx="-108" cy="180" r="4" fill="#241c12"/></g>` : `
+        <g id="sh-boathook" transform="translate(-108,150)">
+          <rect x="-4" y="-72" width="8" height="144" rx="4" fill="#8a7a5c"/>
+          <path d="M-4,-72 Q-22,-84 -18,-98 Q-2,-94 4,-74 Z" fill="#9aa2b2"/>
+          <circle cx="0" cy="-30" r="4" fill="#241c12"/><circle cx="0" cy="30" r="4" fill="#241c12"/>
+        </g>`}
+      </g>
+      <!-- notice board -->
+      <g transform="translate(530,620)">
+        <rect x="-6" y="-40" width="12" height="180" fill="#31261c"/>
+        <rect x="-70" y="-120" width="140" height="92" rx="6" fill="#3d3630" stroke="#241c12" stroke-width="5"/>
+        <rect x="-58" y="-108" width="52" height="32" fill="#d8cfb8" transform="rotate(-3)"/>
+        <rect x="2" y="-104" width="50" height="40" fill="#c9bfa4" transform="rotate(2)"/>
+        <rect x="-52" y="-66" width="58" height="26" fill="#d8cfb8" transform="rotate(1)"/>
+        <g stroke="#6a5f48" stroke-width="2" opacity=".8">
+          <path d="M-52,-98 h40 M-52,-92 h34 M8,-96 h38 M8,-88 h30 M8,-80 h36 M-46,-58 h44"/>
+        </g>
+      </g>
+      <!-- jetty -->
+      <path d="M0,1010 L800,950 L800,1200 L0,1200 Z" fill="#33291d"/>
+      <g stroke="#1c150c" stroke-width="4" opacity=".7"><path d="M0,1080 L800,1024 M0,1150 L800,1100"/></g>
+      <g stroke="#4a3d2a" stroke-width="2" opacity=".4"><path d="M170,1000 L150,1200 M420,985 L415,1200 M660,962 L672,1200"/></g>
+      <!-- storm plaque on jetty post -->
+      <g transform="translate(660,900)">
+        <rect x="-8" y="-10" width="16" height="130" fill="#241c12"/>
+        <rect x="-52" y="-60" width="104" height="56" rx="6" fill="#5c5648" stroke="#2c2821" stroke-width="4"/>
+        <text x="0" y="-38" font-size="15" fill="#d8cfb8" text-anchor="middle" font-family="Georgia">REBUILT AFTER</text>
+        <text x="0" y="-20" font-size="15" fill="#d8cfb8" text-anchor="middle" font-family="Georgia">THE GREAT STORM</text>
+        <text x="0" y="-4" font-size="17" fill="#e8b44a" text-anchor="middle" font-family="Georgia" font-weight="bold">— 1957 —</text>
+      </g>
+      <!-- skiff -->
+      <g transform="translate(210,1035)">
+        <animateTransform attributeName="transform" type="translate" values="210,1035;210,1041;210,1035" dur="4.8s" repeatCount="indefinite"/>
+        <path d="M-100,0 Q0,36 104,-4 L82,34 Q0,56 -76,34 Z" fill="#2c2033"/>
+        <path d="M-100,0 Q0,32 104,-4 L100,4 Q0,40 -94,8 Z" fill="#54394a"/>
+        ${f.b_hasOars ? `<g id="sh-oars-in">
+          <path d="M-30,10 L-90,-30" stroke="#8a7a5c" stroke-width="7" stroke-linecap="round"/>
+          <path d="M34,8 L96,-26" stroke="#7a6a4e" stroke-width="7" stroke-linecap="round"/></g>` : ''}
+        <path d="M-40,16 L-44,40 M42,14 L46,38" stroke="#1c150c" stroke-width="4"/>
+      </g>
+      <!-- crab pots -->
+      <g transform="translate(680,1105)">
+        <g fill="none" stroke="#4a3d2a" stroke-width="4">
+          <ellipse cx="0" cy="0" rx="44" ry="18"/><ellipse cx="0" cy="-26" rx="34" ry="14"/>
+          <path d="M-44,0 L-34,-26 M44,0 L34,-26 M0,18 L0,-40"/>
+        </g>
+        <circle cx="-14" cy="-4" r="5" fill="#c25454" opacity=".8"/>
+      </g>
+      <!-- path up to the light -->
+      <g transform="translate(80,760)">
+        <path d="M-40,-120 Q-10,-60 -20,40 L40,40 Q26,-70 60,-140 Q10,-160 -40,-120 Z" fill="#2c3038" opacity=".9"/>
+        <path d="M-6,20 Q4,-40 22,-100" stroke="#4a525e" stroke-width="5" fill="none" stroke-dasharray="2 13" stroke-linecap="round"/>
+        <circle cx="30" cy="-150" r="26" fill="url(#sh-glow)"/>
+      </g>
+      ${fogBands('sh', .5)}`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ BELL ROCK (ch2) */
+  function bellrock(f = {}) {
+    const defs = `
+      <linearGradient id="br-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#232b3d"/><stop offset="100%" stop-color="#48525f"/>
+      </linearGradient>
+      <linearGradient id="br-sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3d4754"/><stop offset="100%" stop-color="#1a212c"/>
+      </linearGradient>
+      <linearGradient id="br-stone" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#5a5f6b"/><stop offset="100%" stop-color="#353a45"/>
+      </linearGradient>
+      <radialGradient id="br-moon" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#e8ecf7" stop-opacity=".4"/><stop offset="100%" stop-color="#e8ecf7" stop-opacity="0"/>
+      </radialGradient>`;
+
+    const body = `
+      <rect width="800" height="740" fill="url(#br-sky)"/>
+      <circle cx="560" cy="150" r="110" fill="url(#br-moon)"/>
+      <circle cx="560" cy="150" r="38" fill="#dfe4f0" opacity=".8"/>
+      <rect y="740" width="800" height="460" fill="url(#br-sea)"/>
+      <g opacity=".45" stroke="#7a8aa0" stroke-width="2.5" fill="none">
+        <path d="M80,800 q40,-7 84,0 t76,0"><animate attributeName="opacity" values=".45;.15;.45" dur="4.6s" repeatCount="indefinite"/></path>
+        <path d="M420,880 q46,-8 92,0 t84,0"><animate attributeName="opacity" values=".15;.45;.15" dur="5.8s" repeatCount="indefinite"/></path>
+      </g>
+      <!-- the islet -->
+      <path d="M0,1200 L0,900 Q80,830 200,840 L620,860 Q760,870 800,940 L800,1200 Z" fill="#232630"/>
+      <path d="M60,900 Q110,850 190,856 M600,864 Q680,868 730,910" stroke="#12141c" stroke-width="6" fill="none" opacity=".7"/>
+      <!-- bell tower -->
+      <g transform="translate(430,560)">
+        <path d="M-95,320 L95,320 L78,-10 L-78,-10 Z" fill="url(#br-stone)"/>
+        <g stroke="#2a2e38" stroke-width="3" opacity=".6">
+          <path d="M-88,180 H88 M-84,100 H84 M-92,260 H92 M-80,20 H80"/>
+          <path d="M-30,180 L-30,100 M30,260 L30,180 M-20,320 L-20,260 M46,100 L46,20"/>
+        </g>
+        <path d="M-92,-10 L92,-10 L0,-88 Z" fill="#2a2e38"/>
+        <!-- open arch with the bell -->
+        <path d="M-52,180 L52,180 L52,60 Q0,10 -52,60 Z" fill="#0d0f16"/>
+        <g transform="translate(0,78)">
+          <path d="M0,-14 L0,-4" stroke="#6a5f48" stroke-width="5"/>
+          <g>
+            ${f.b_bellRung ? '<animateTransform attributeName="transform" type="rotate" values="-16 0 -4;16 0 -4;-16 0 -4" dur="1.6s" repeatCount="indefinite"/>' : ''}
+            <path d="M-30,58 Q-34,6 0,0 Q34,6 30,58 L36,64 Q0,74 -36,64 Z" fill="#a8863e"/>
+            <path d="M-30,58 Q-34,6 0,0 L0,70 Q-18,70 -36,64 Z" fill="#c9a24a" opacity=".55"/>
+            ${f.b_chainOn ? `<path d="M0,64 L0,84" stroke="#d9d2c0" stroke-width="4"/><circle cx="0" cy="88" r="7" fill="#b8b2a0"/>` : ''}
+          </g>
+        </g>
+        <!-- frayed rope hanging -->
+        ${f.b_chainOn ? '' : `<g id="br-frayed">
+          <path d="M40,168 q4,26 -2,48" stroke="#8a7a5c" stroke-width="5" fill="none">
+            <animateTransform attributeName="transform" type="rotate" values="-5 40 168;5 40 168;-5 40 168" dur="3.4s" repeatCount="indefinite"/>
+          </path>
+          <path d="M38,214 l-6,12 M40,214 l2,13 M42,213 l8,10" stroke="#8a7a5c" stroke-width="2.5"/>
+        </g>`}
+        <path d="M-60,320 L60,320 L52,252 Q0,236 -52,252 Z" fill="#1c1f28"/>
+        <path d="M-44,320 L44,320 L44,262 Q0,248 -44,262 Z" fill="#2e333f"/>
+      </g>
+      <!-- crag with magpie nest -->
+      <g transform="translate(185,520)">
+        <path d="M-70,340 Q-90,140 -30,40 Q0,-10 40,-24 Q60,60 44,180 L60,340 Z" fill="#2a2d38"/>
+        <path d="M-40,180 Q-20,120 8,60" stroke="#12141c" stroke-width="5" fill="none" opacity=".6"/>
+        <!-- nest -->
+        <g transform="translate(24,-18)">
+          <path d="M-34,10 Q0,30 34,10 Q28,-8 0,-12 Q-28,-8 -34,10 Z" fill="#4a3d26"/>
+          <g stroke="#6a5a3a" stroke-width="2.5" opacity=".9">
+            <path d="M-32,4 L-46,-4 M32,4 L46,-2 M-20,-8 L-30,-20 M22,-8 L34,-18 M0,-10 L-4,-24"/>
+          </g>
+          ${f.b_nestLooted ? '' : `<g id="br-glints">
+            <circle cx="-10" cy="0" r="4" fill="#e8e4d8"><animate attributeName="opacity" values="1;.3;1" dur="1.8s" repeatCount="indefinite"/></circle>
+            <circle cx="8" cy="-2" r="3.4" fill="#ffd98a"><animate attributeName="opacity" values=".4;1;.4" dur="2.3s" repeatCount="indefinite"/></circle>
+            <path d="M-2,4 q6,-4 12,0" stroke="#d9d2c0" stroke-width="3" fill="none"/>
+          </g>`}
+        </g>
+      </g>
+      <!-- magpie circling -->
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0,0;150,-60;300,-20;150,40;0,0" dur="16s" repeatCount="indefinite"/>
+        <g transform="translate(240,330)">
+          <path d="M0,0 q-14,-16 -30,-6 q12,2 16,10 q-16,2 -26,14 q16,-2 26,2 Z" fill="#14161c"/>
+          <path d="M0,0 q16,-10 30,-2 q-12,4 -14,12 q14,0 24,10 q-16,0 -26,4 Z" fill="#e8e4d8" opacity=".85"/>
+          <circle cx="2" cy="2" r="6" fill="#14161c"/>
+        </g>
+      </g>
+      <!-- tide pool + mussels -->
+      <g transform="translate(640,1060)">
+        <ellipse cx="0" cy="0" rx="86" ry="30" fill="#131c2c"/>
+        <ellipse cx="-10" cy="-3" rx="52" ry="15" fill="#22364f" opacity=".7">
+          <animate attributeName="opacity" values=".7;.35;.7" dur="4.8s" repeatCount="indefinite"/>
+        </ellipse>
+        <g fill="#1c2230"><ellipse cx="-60" cy="24" rx="12" ry="6" transform="rotate(-18 -60 24)"/><ellipse cx="66" cy="16" rx="11" ry="5" transform="rotate(12 66 16)"/><ellipse cx="40" cy="30" rx="10" ry="5"/></g>
+      </g>
+      <!-- your skiff -->
+      <g transform="translate(160,1020)">
+        <animateTransform attributeName="transform" type="translate" values="160,1020;160,1026;160,1020" dur="4.4s" repeatCount="indefinite"/>
+        <path d="M-84,0 Q0,30 88,-4 L70,28 Q0,48 -64,28 Z" fill="#2c2033"/>
+        <path d="M-26,8 L-78,-26" stroke="#8a7a5c" stroke-width="6" stroke-linecap="round"/>
+        <path d="M30,6 L84,-22" stroke="#7a6a4e" stroke-width="6" stroke-linecap="round"/>
+      </g>
+      ${fogBands('br', .32)}`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ PROLOGUE CH2 */
+  function prologue2(n) {
+    if (n === 1) {
+      /* fog rolling over the harbor */
+      const defs = `
+        <linearGradient id="q1-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#10182e"/><stop offset="100%" stop-color="#3d4656"/>
+        </linearGradient>
+        <linearGradient id="q1-sea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3a4456"/><stop offset="100%" stop-color="#161d2b"/>
+        </linearGradient>`;
+      const body = `
+        <rect width="800" height="720" fill="url(#q1-sky)"/>
+        <rect y="720" width="800" height="480" fill="url(#q1-sea)"/>
+        <!-- town silhouette -->
+        <g fill="#141a26">
+          <path d="M140,720 L140,640 L180,640 L180,600 L220,600 L220,720 Z"/>
+          <path d="M240,720 L240,620 L300,585 L360,620 L360,720 Z"/>
+          <path d="M380,720 L380,650 L440,650 L440,720 Z"/>
+          <path d="M460,720 L460,610 L500,580 L540,610 L540,720 Z"/>
+        </g>
+        <g fill="#ffd98a" opacity=".85">
+          <rect x="262" y="636" width="14" height="18"/><rect x="310" y="640" width="12" height="16"/>
+          <rect x="480" y="626" width="12" height="16"><animate attributeName="opacity" values="1;.4;1" dur="4s" repeatCount="indefinite"/></rect>
+        </g>
+        <!-- the light, sweeping weakly -->
+        <g transform="translate(600,470)">
+          <path d="M-22,250 L22,250 L14,-40 L-14,-40 Z" fill="#8a92a2"/>
+          <path d="M-19,120 L19,120 L18,84 L-18,84 Z" fill="#7a3a46"/>
+          <rect x="-10" y="-64" width="20" height="26" fill="#ffe9a8"/>
+          <path d="M-13,-64 L13,-64 L0,-80 Z" fill="#2b303c"/>
+          <polygon points="0,-52 300,-96 300,-8" fill="#ffe9a8" opacity=".12">
+            <animateTransform attributeName="transform" type="rotate" values="-24 0 -52;16 0 -52;-24 0 -52" dur="8s" repeatCount="indefinite"/>
+          </polygon>
+        </g>
+        <!-- fog devouring everything, rolling in from the sea -->
+        <g opacity=".9">
+          <g><animateTransform attributeName="transform" type="translate" values="-220,0;40,0;-220,0" dur="18s" repeatCount="indefinite"/>
+            <ellipse cx="220" cy="800" rx="520" ry="110" fill="#c9d2e0" opacity=".5"/>
+            <ellipse cx="700" cy="880" rx="480" ry="90" fill="#b8c2d4" opacity=".45"/>
+          </g>
+          <g><animateTransform attributeName="transform" type="translate" values="160,0;-120,0;160,0" dur="26s" repeatCount="indefinite"/>
+            <ellipse cx="300" cy="980" rx="560" ry="130" fill="#cfd8e6" opacity=".5"/>
+          </g>
+          <g><animateTransform attributeName="transform" type="translate" values="-90,0;110,0;-90,0" dur="33s" repeatCount="indefinite"/>
+            <ellipse cx="460" cy="700" rx="500" ry="80" fill="#b8c2d4" opacity=".35"/>
+          </g>
+        </g>`;
+      return wrap(defs, body);
+    }
+    if (n === 2) {
+      /* the ferry, a ghost in the white */
+      const defs = `
+        <radialGradient id="q2-fog" cx="50%" cy="45%" r="75%">
+          <stop offset="0%" stop-color="#8a96a8"/><stop offset="100%" stop-color="#525d6d"/>
+        </radialGradient>
+        ${lanternGlow(0, 0, 0, 'q2-glow')}`;
+      const body = `
+        <rect width="800" height="1200" fill="url(#q2-fog)"/>
+        <!-- ferry silhouette, barely there, bobbing -->
+        <g opacity=".8">
+          <animateTransform attributeName="transform" type="translate" values="0,0;0,14;0,0" dur="6s" repeatCount="indefinite"/>
+          <g transform="translate(400,620)">
+            <path d="M-210,60 Q0,110 216,52 L180,128 Q0,164 -160,128 Z" fill="#1d2330"/>
+            <rect x="-130" y="-14" width="250" height="76" rx="10" fill="#242c3c"/>
+            <rect x="-60" y="-58" width="120" height="46" rx="8" fill="#1d2330"/>
+            <rect x="24" y="-96" width="18" height="40" fill="#141a26"/>
+            <g fill="#ffd98a">
+              <rect x="-112" y="6" width="22" height="26" rx="4"><animate attributeName="opacity" values=".9;.5;.9" dur="3s" repeatCount="indefinite"/></rect>
+              <rect x="-70" y="6" width="22" height="26" rx="4"/>
+              <rect x="-28" y="6" width="22" height="26" rx="4"><animate attributeName="opacity" values=".6;1;.6" dur="4s" repeatCount="indefinite"/></rect>
+              <rect x="14" y="6" width="22" height="26" rx="4"/>
+              <rect x="56" y="6" width="22" height="26" rx="4"/>
+              <rect x="-36" y="-48" width="16" height="20" rx="3"/>
+              <rect x="8" y="-48" width="16" height="20" rx="3"/>
+            </g>
+            <circle cx="-170" cy="-20" r="60" fill="url(#q2-glow)" opacity=".7"/>
+            <circle cx="-170" cy="-20" r="7" fill="#8ae0a0" opacity=".9"><animate attributeName="opacity" values=".9;.3;.9" dur="2s" repeatCount="indefinite"/></circle>
+          </g>
+        </g>
+        <!-- fog layers over it -->
+        <g opacity=".85">
+          <g><animateTransform attributeName="transform" type="translate" values="-140,0;100,0;-140,0" dur="17s" repeatCount="indefinite"/>
+            <ellipse cx="300" cy="560" rx="540" ry="120" fill="#a5b0c2" opacity=".5"/>
+          </g>
+          <g><animateTransform attributeName="transform" type="translate" values="120,0;-140,0;120,0" dur="23s" repeatCount="indefinite"/>
+            <ellipse cx="480" cy="760" rx="560" ry="140" fill="#95a2b5" opacity=".55"/>
+          </g>
+          <g><animateTransform attributeName="transform" type="translate" values="-80,0;80,0;-80,0" dur="31s" repeatCount="indefinite"/>
+            <ellipse cx="380" cy="380" rx="520" ry="100" fill="#a5b0c2" opacity=".4"/>
+          </g>
+        </g>`;
+      return wrap(defs, body);
+    }
+    /* n === 3: the silent bell */
+    const defs = `
+      <linearGradient id="q3-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1c2333"/><stop offset="100%" stop-color="#414b5a"/>
+      </linearGradient>
+      <linearGradient id="q3-stone" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#5a5f6b"/><stop offset="100%" stop-color="#353a45"/>
+      </linearGradient>`;
+    const body = `
+      <rect width="800" height="1200" fill="url(#q3-sky)"/>
+      <circle cx="250" cy="200" r="42" fill="#dfe4f0" opacity=".6"/>
+      <!-- big silent bell tower -->
+      <g transform="translate(430,520)">
+        <path d="M-130,480 L130,480 L104,-40 L-104,-40 Z" fill="url(#q3-stone)"/>
+        <path d="M-122,-40 L122,-40 L0,-140 Z" fill="#2a2e38"/>
+        <g stroke="#2a2e38" stroke-width="4" opacity=".6">
+          <path d="M-118,220 H118 M-112,100 H112 M-124,340 H124"/>
+        </g>
+        <path d="M-70,220 L70,220 L70,50 Q0,-16 -70,50 Z" fill="#0d0f16"/>
+        <g transform="translate(0,80)">
+          <path d="M0,-24 L0,-8" stroke="#6a5f48" stroke-width="6"/>
+          <path d="M-42,76 Q-46,4 0,-4 Q46,4 42,76 L50,86 Q0,100 -50,86 Z" fill="#a8863e"/>
+          <path d="M-42,76 Q-46,4 0,-4 L0,92 Q-25,92 -50,86 Z" fill="#c9a24a" opacity=".5"/>
+        </g>
+        <!-- a crow lands and waits -->
+        <g transform="translate(86,-52)">
+          <path d="M0,0 q-10,-14 -24,-8 q8,4 10,10 q-10,2 -16,10 q10,-2 18,0 Z" fill="#0d0f16">
+            <animateTransform attributeName="transform" type="translate" values="0,0;0,-3;0,0" dur="3s" repeatCount="indefinite"/>
+          </path>
+        </g>
+      </g>
+      <!-- ground fog -->
+      <g opacity=".8">
+        <g><animateTransform attributeName="transform" type="translate" values="-100,0;80,0;-100,0" dur="21s" repeatCount="indefinite"/>
+          <ellipse cx="320" cy="1030" rx="540" ry="120" fill="#a5b0c2" opacity=".5"/>
+        </g>
+        <g><animateTransform attributeName="transform" type="translate" values="90,0;-90,0;90,0" dur="29s" repeatCount="indefinite"/>
+          <ellipse cx="480" cy="1140" rx="560" ry="110" fill="#95a2b5" opacity=".5"/>
+        </g>
+      </g>`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ ENDING CH2 */
+  function ending2() {
+    const defs = `
+      <linearGradient id="e2-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#141c33"/><stop offset="65%" stop-color="#2c3a5c"/><stop offset="100%" stop-color="#4a5a7a"/>
+      </linearGradient>
+      <linearGradient id="e2-sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3d4c6a"/><stop offset="100%" stop-color="#101828"/>
+      </linearGradient>
+      <radialGradient id="e2-moon" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#e8ecf7" stop-opacity=".55"/><stop offset="100%" stop-color="#e8ecf7" stop-opacity="0"/>
+      </radialGradient>`;
+    const body = `
+      <rect width="800" height="760" fill="url(#e2-sky)"/>
+      ${stars(24, 311, 360, 'e2')}
+      <circle cx="400" cy="210" r="150" fill="url(#e2-moon)"/>
+      <circle cx="400" cy="210" r="52" fill="#e9edf8"/>
+      <circle cx="384" cy="196" r="10" fill="#c9cfdf"/><circle cx="416" cy="226" r="13" fill="#c9cfdf"/>
+      <rect y="760" width="800" height="440" fill="url(#e2-sea)"/>
+      <path d="M330,760 L470,760 L440,1200 L360,1200 Z" fill="#d8dff0" opacity=".18"/>
+      <g opacity=".5" stroke="#6a80b0" stroke-width="2.5" fill="none">
+        <path d="M90,830 q40,-7 84,0 t76,0"/><path d="M440,910 q46,-8 92,0 t84,0"/>
+      </g>
+      <!-- bell rock, bell swinging joyfully -->
+      <g transform="translate(160,690)">
+        <path d="M-120,510 L120,510 L96,70 Q60,20 0,16 Q-60,20 -96,70 Z" fill="#232630"/>
+        <g transform="translate(0,120)">
+          <path d="M-60,110 L60,110 L50,-10 L-50,-10 Z" fill="#3d434f"/>
+          <path d="M-56,-10 L56,-10 L0,-58 Z" fill="#262a33"/>
+          <path d="M-34,84 L34,84 L34,10 Q0,-16 -34,10 Z" fill="#0d0f16"/>
+          <g transform="translate(0,32)">
+            <path d="M0,-12 L0,-4" stroke="#6a5f48" stroke-width="4"/>
+            <g>
+              <animateTransform attributeName="transform" type="rotate" values="-20 0 -4;20 0 -4;-20 0 -4" dur="1.5s" repeatCount="indefinite"/>
+              <path d="M-20,38 Q-23,2 0,-2 Q23,2 20,38 L25,44 Q0,52 -25,44 Z" fill="#c9a24a"/>
+            </g>
+          </g>
+        </g>
+      </g>
+      <!-- the ferry gliding home, windows warm -->
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0,0;0,8;0,0" dur="5.4s" repeatCount="indefinite"/>
+        <g transform="translate(480,930)">
+          <path d="M-190,50 Q0,96 196,44 L164,112 Q0,146 -146,112 Z" fill="#1d2330"/>
+          <rect x="-120" y="-18" width="228" height="70" rx="9" fill="#242c3c"/>
+          <rect x="-54" y="-58" width="108" height="42" rx="7" fill="#1d2330"/>
+          <rect x="20" y="-92" width="16" height="36" fill="#141a26"/>
+          <g fill="#ffd98a">
+            <rect x="-102" y="0" width="20" height="24" rx="4"/><rect x="-64" y="0" width="20" height="24" rx="4"/>
+            <rect x="-26" y="0" width="20" height="24" rx="4"/><rect x="12" y="0" width="20" height="24" rx="4"/>
+            <rect x="50" y="0" width="20" height="24" rx="4"/><rect x="-32" y="-48" width="14" height="18" rx="3"/><rect x="6" y="-48" width="14" height="18" rx="3"/>
+          </g>
+          <g opacity=".85"><ellipse cx="30" cy="-108" rx="10" ry="7" fill="#8a96a8">
+            <animate attributeName="opacity" values=".7;0" dur="3.4s" repeatCount="indefinite"/>
+            <animateTransform attributeName="transform" type="translate" values="0,0;16,-30" dur="3.4s" repeatCount="indefinite"/>
+          </ellipse></g>
+        </g>
+      </g>
+      <!-- last shreds of fog, thinning -->
+      <g opacity=".35">
+        <g><animateTransform attributeName="transform" type="translate" values="-70,0;70,0;-70,0" dur="37s" repeatCount="indefinite"/>
+          <ellipse cx="400" cy="1120" rx="520" ry="80" fill="#a5b0c2" opacity=".4"/>
+        </g>
       </g>`;
     return wrap(defs, body);
   }
@@ -1020,7 +1471,10 @@ const Art = (() => {
     oilcan: icon(`<path d="M12,40 L36,40 L33,20 L15,20 Z" fill="#5f6b4a"/><path d="M15,20 L33,20 L29,13 L19,13 Z" fill="#4a5439"/><path d="M29,15 L42,6" stroke="#4a5439" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="30" r="6" fill="#3c452e"/><path d="M19,13 L19,9 L24,9" stroke="#4a5439" stroke-width="3" fill="none"/>`),
     crank: icon(`<g transform="rotate(25 24 24)"><rect x="10" y="21" width="22" height="6" rx="3" fill="#7a6248"/><rect x="28" y="10" width="6" height="17" rx="3" fill="#7a6248"/><rect x="25" y="6" width="12" height="8" rx="4" fill="#5a4632"/><circle cx="13" cy="24" r="6" fill="#4a3826" stroke="#2c2011" stroke-width="2"/><rect x="11" y="22" width="4" height="4" fill="#241a10"/></g>`),
     lighthousekey: icon(`<g transform="rotate(-35 24 24)"><path d="M24,3 L30,11 L27,11 L27,15 L21,15 L21,11 L18,11 Z" fill="#c98a2e"/><circle cx="24" cy="11" r="8" fill="none" stroke="#c98a2e" stroke-width="4"/><rect x="22" y="18" width="4.5" height="23" fill="#c98a2e"/><rect x="26" y="31" width="8" height="4.5" fill="#c98a2e"/><rect x="26" y="38" width="6" height="4" fill="#c98a2e"/></g>`),
+    oars: icon(`<g transform="rotate(38 24 24)"><rect x="21.5" y="10" width="5" height="32" rx="2.5" fill="#8a7a5c"/><path d="M21.5,10 Q14,2 24,-2 Q33,3 26.5,11 Z" transform="translate(0,4)" fill="#8a7a5c"/></g><g transform="rotate(-38 24 24)"><rect x="21.5" y="10" width="5" height="32" rx="2.5" fill="#7a6a4e"/><path d="M21.5,10 Q14,2 24,-2 Q33,3 26.5,11 Z" transform="translate(0,4)" fill="#7a6a4e"/></g>`),
+    boathook: icon(`<g transform="rotate(30 24 24)"><rect x="21.5" y="8" width="5" height="36" rx="2.5" fill="#8a7a5c"/><path d="M21.5,8 Q10,1 13,-8 Q24,-5 27,7 Z" transform="translate(0,7)" fill="#9aa2b2"/></g>`),
+    strikerchain: icon(`<g stroke="#b8b2a0" stroke-width="3" fill="none"><ellipse cx="20" cy="10" rx="5" ry="7" transform="rotate(-16 20 10)"/><ellipse cx="25" cy="20" rx="5" ry="7" transform="rotate(10 25 20)"/><ellipse cx="27" cy="31" rx="5" ry="7" transform="rotate(-6 27 31)"/></g><circle cx="28" cy="42" r="6" fill="#d9d2c0"/>`),
   };
 
-  return { dock, exterior, cottage, lamp, cliffs, cave, prologue, title, ending, portraits, icons };
+  return { dock, exterior, cottage, lamp, cliffs, cave, shore, bellrock, prologue, prologue2, title, ending, ending2, portraits, icons };
 })();
