@@ -146,18 +146,34 @@ function ok(cond, msg) {
   ok((await page.locator('#btn-continue').isHidden()), 'no Continue button without a save');
   await shot('01-title');
 
-  console.log('\n== New game & intro ==');
+  console.log('\n== New game & prologue cutscene ==');
   await page.locator('#btn-new').click();
+  await page.waitForTimeout(500);
+  ok(await page.locator('#prologue-screen').isVisible(), 'prologue cutscene plays first');
+  const cap1 = await page.locator('#prologue-caption').textContent();
+  ok(cap1.includes('nine years'), 'slide 1: Alvar writing');
+  await shot('00-prologue-1');
+  await page.locator('#prologue-screen').click();
   await page.waitForTimeout(400);
-  let d = await advanceDialog();
-  ok(d.closed, 'intro dialogue completes');
+  const cap2 = await page.locator('#prologue-caption').textContent();
+  ok(cap2 !== cap1 && cap2.includes('mid-sentence'), 'tap advances to slide 2 (the letter)');
+  await shot('00-prologue-2');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(400);
+  const cap3 = await page.locator('#prologue-caption').textContent();
+  ok(cap3.includes('first boat north'), 'slide 3: the boat north');
+  await shot('00-prologue-3');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(500);
+  ok(await page.locator('#game-screen').isVisible(), 'prologue ends into the game');
   let s = await state();
   ok(s.scene === 'dock', 'starts at the dock');
+  ok(s.introDone === true, 'prologue marked done');
   await shot('02-dock');
 
   console.log('\n== Marta dialogue tree ==');
   await tap('marta');
-  d = await advanceDialog();
+  let d = await advanceDialog();
   ok(!d.closed && d.choices.length >= 3, 'Marta hub offers choices (' + d.choices.length + ')');
   ok(!d.choices.some(c => c.includes('strange in the harbor')), 'harbormaster topic hidden before asking about Alvar');
   await pickChoice('last see my uncle');
@@ -193,9 +209,11 @@ function ok(cond, msg) {
   await tap('flowerpot');
   s = await state();
   ok(s.inv.includes('cottagekey'), 'got cottage key from marigolds');
+  ok(await page.evaluate(() => !!document.getElementById('ex-prybar')), 'pry bar visible in woodpile before pickup');
   await tap('woodpile');
   s = await state();
   ok(s.inv.includes('prybar'), 'got pry bar from woodpile');
+  ok(await page.evaluate(() => !document.getElementById('ex-prybar')), 'pry bar art removed from woodpile after pickup');
   await tap('lightdoor');
   ok((await captionText()).includes('brass'), 'lighthouse door wants brass key');
   await tap('cliffpath');
@@ -223,9 +241,11 @@ function ok(cond, msg) {
   s = await state();
   ok(s.clues.includes('clock'), 'clock clue (7:25)');
   await tap('painting'); await tap('window2'); await tap('armchair'); await tap('desk');
+  ok(await page.evaluate(() => !!document.getElementById('ct-oilcan')), 'oil can visible on shelf before pickup');
   await tap('shelf');
   s = await state();
   ok(s.inv.includes('oilcan'), 'got oil can');
+  ok(await page.evaluate(() => !document.getElementById('ct-oilcan') && !!document.getElementById('ct-oilring')), 'oil can art replaced by a ring mark after pickup');
 
   console.log('\n== Drawer keypad puzzle ==');
   await tap('drawer');
@@ -315,10 +335,12 @@ function ok(cond, msg) {
   await tap('todock');
   s = await state();
   ok(s.scene === 'dock', 'back at the dock');
+  ok(await page.evaluate(() => !!document.getElementById('dk-crate-closed')), 'crate shown nailed shut before prying');
   await useItem('prybar', 'crate');
   s = await state();
   ok(s.inv.includes('crank'), 'crank recovered from crate');
   ok(s.clues.includes('crate_mark'), 'V-stamp clue recorded');
+  ok(await page.evaluate(() => !document.getElementById('dk-crate-closed') && !!document.getElementById('dk-crate-open')), 'crate art shows pried-open lid and V stamp');
 
   console.log('\n== The cliffs ==');
   await tap('tolighthouse');
@@ -372,7 +394,11 @@ function ok(cond, msg) {
 
   console.log('\n== Save/continue mid-game ==');
   await page.locator('#btn-new').click();
-  await advanceDialog();
+  await page.waitForTimeout(500);
+  ok(await page.locator('#prologue-screen').isVisible(), 'prologue plays again on a fresh game');
+  await page.locator('#btn-skip').click();
+  await page.waitForTimeout(500);
+  ok(await page.locator('#game-screen').isVisible(), 'Skip jumps straight into the game');
   await tap('marta');
   d = await advanceDialog();
   await pickChoice('back to her nets');

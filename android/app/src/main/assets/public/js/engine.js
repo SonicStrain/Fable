@@ -11,6 +11,7 @@
 
   const el = {
     title: $('title-screen'), game: $('game-screen'), ending: $('ending-screen'),
+    prologue: $('prologue-screen'), prologueArt: $('prologue-art'), prologueCaption: $('prologue-caption'),
     titleArt: $('title-art'), endingArt: $('ending-art'), endingText: $('ending-text'),
     stage: $('stage'), caption: $('caption'), sceneName: $('scene-name'),
     invSlots: $('inv-slots'), toast: $('toast'),
@@ -97,7 +98,7 @@
 
   /* ---------------- screens ---------------- */
   function show(screen) {
-    [el.title, el.game, el.ending].forEach(s => s.classList.add('hidden'));
+    [el.title, el.game, el.ending, el.prologue].forEach(s => s.classList.add('hidden'));
     screen.classList.remove('hidden');
   }
 
@@ -115,12 +116,44 @@
     if (fresh) { state = freshState(); save(); }
     else { state = loadSave() || freshState(); }
     selectedItem = null;
+    if (!state.introDone) { showPrologue(); return; }
+    enterGame();
+  }
+
+  function enterGame() {
+    clearTimeout(prologueTimer);
+    if (!state.introDone) { state.introDone = true; save(); }
     show(el.game);
     renderScene(); renderInventory();
-    if (!state.introDone) {
-      state.introDone = true; save();
-      openDialog('intro1');
-    }
+  }
+
+  /* ---------------- prologue cutscene ---------------- */
+  let prologueSlide = 0;
+  let prologueTimer = null;
+
+  function showPrologue() {
+    prologueSlide = 0;
+    show(el.prologue);
+    paintPrologue();
+  }
+
+  function paintPrologue() {
+    clearTimeout(prologueTimer);
+    const s = Prologue[prologueSlide];
+    el.prologueArt.innerHTML = s.art();
+    // retrigger the caption entrance animation
+    const cap = el.prologueCaption;
+    cap.textContent = s.text;
+    cap.style.animation = 'none';
+    void cap.offsetWidth;
+    cap.style.animation = '';
+    prologueTimer = setTimeout(nextPrologue, 8500);
+  }
+
+  function nextPrologue() {
+    prologueSlide++;
+    if (prologueSlide >= Prologue.length) enterGame();
+    else paintPrologue();
   }
 
   function showEnding() {
@@ -649,6 +682,10 @@
     el.stage.addEventListener('click', () => {
       if (selectedItem) { deselectItem(); showCaption('You put it back in your satchel.'); }
     });
+
+    // prologue controls
+    el.prologue.addEventListener('click', nextPrologue);
+    $('btn-skip').addEventListener('click', ev => { ev.stopPropagation(); enterGame(); });
   }
 
   document.addEventListener('DOMContentLoaded', init);

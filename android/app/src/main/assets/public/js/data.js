@@ -49,17 +49,6 @@ function currentObjective(f) {
 
 /* ---------------- Dialogue trees ---------------- */
 const Dialogs = {
-  /* ---- intro ---- */
-  intro1: { speaker: '', portrait: 'narrator',
-    text: 'Uncle Alvar\'s letters arrived every month for nine years. Then, three weeks ago — nothing.',
-    next: 'intro2' },
-  intro2: { speaker: '', portrait: 'narrator',
-    text: 'The last one ended mid-sentence: "The harbor is not what it was, Kel. If anything should happen to me—"',
-    next: 'intro3' },
-  intro3: { speaker: '', portrait: 'narrator',
-    text: 'You took the first boat north. Grey Harbor greets you with cold spray, gull-cries, and a lighthouse that still turns... though its keeper is gone.',
-    next: null },
-
   /* ---- Marta ---- */
   marta_hub: { speaker: 'Marta', portrait: 'marta',
     text: 'You\'d be Kel, then. Alvar\'s sister\'s child — he kept your letters in his coat pocket like they were banknotes. Ask me what you need.',
@@ -152,13 +141,23 @@ const EndingText = [
   'And if the cottage clock still reads 7:25 — well. Some lies are worth keeping, twice a day.',
 ];
 
+/* ---------------- Prologue (cinematic intro) ---------------- */
+const Prologue = [
+  { art: () => Art.prologue(1),
+    text: 'Uncle Alvar\'s letters arrived every month for nine years. Then, three weeks ago — nothing.' },
+  { art: () => Art.prologue(2),
+    text: 'His last letter ended mid-sentence, the ink trailing into a blot.' },
+  { art: () => Art.prologue(3),
+    text: 'You took the first boat north — to cold spray, gull-cries, and a light that turns without its keeper.' },
+];
+
 /* ---------------- Scenes ---------------- */
 const Scenes = {
 
   /* ============ THE DOCK ============ */
   dock: {
     name: 'Grey Harbor Dock',
-    art: () => Art.dock(),
+    art: f => Art.dock(f),
     hotspots: [
       { id: 'marta', label: 'Fisherwoman', rect: [340, 590, 180, 290],
         onTap: g => g.dialog(g.flag('metMarta') ? 'marta_hub2' : 'marta_hub') },
@@ -173,6 +172,7 @@ const Scenes = {
         onItem: { prybar: g => {
           if (g.flag('crateOpen')) { g.say('They\'re already open.'); return; }
           g.setFlag('crateOpen'); g.addClue('crate_mark'); g.addItem('crank');
+          g.refresh();
           g.say('The nails shriek loose. Inside: mostly straw — and an iron winch crank that matches no machine on this dock. Under the lid, every "GH" brand is over-stamped with a crude "V".');
         } } },
       { id: 'lamppost', label: 'Dock lamp', rect: [620, 490, 150, 220],
@@ -189,7 +189,7 @@ const Scenes = {
   /* ============ LIGHTHOUSE EXTERIOR ============ */
   exterior: {
     name: 'The Point',
-    art: () => Art.exterior(),
+    art: f => Art.exterior(f),
     hotspots: [
       { id: 'lightdoor', label: 'Lighthouse door', rect: [190, 680, 120, 160],
         onTap: g => {
@@ -223,6 +223,7 @@ const Scenes = {
         onTap: g => {
           if (g.flag('gotPrybar')) { g.say('Split logs, neatly stacked. Alvar was always tidy about firewood and untidy about everything else.'); return; }
           g.setFlag('gotPrybar'); g.addItem('prybar');
+          g.refresh();
           g.say('Between the logs, something glints: a rusty pry bar, wedged in like a bookmark. You work it free.');
         } },
       { id: 'moon', label: 'The night sky', rect: [520, 60, 260, 200],
@@ -241,7 +242,7 @@ const Scenes = {
   /* ============ COTTAGE INTERIOR ============ */
   cottage: {
     name: 'Keeper\'s Cottage',
-    art: () => Art.cottage(),
+    art: f => Art.cottage(f),
     hotspots: [
       { id: 'fireplace', label: 'Fireplace', rect: [40, 620, 240, 260],
         onTap: g => {
@@ -260,6 +261,7 @@ const Scenes = {
         onTap: g => {
           if (g.flag('gotOil')) { g.say('A tin mug and a ring where the oil can stood.'); return; }
           g.setFlag('gotOil'); g.addItem('oilcan');
+          g.refresh();
           g.say('A keeper\'s shelf: spare wicks, a tin mug, and a can of machine oil. You take the oil — around here, everything old is rusted, and everything is old.');
         } },
       { id: 'armchair', label: 'Armchair', rect: [315, 730, 160, 180],

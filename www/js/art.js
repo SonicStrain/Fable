@@ -47,7 +47,7 @@ const Art = (() => {
   }
 
   /* ------------------------------------------------ DOCK */
-  function dock() {
+  function dock(f = {}) {
     const defs = `
       <linearGradient id="dk-sky" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#131a3d"/><stop offset="55%" stop-color="#3b2f63"/>
@@ -130,9 +130,25 @@ const Art = (() => {
         <rect x="-60" y="-70" width="120" height="86" rx="4" fill="#4d3a22"/>
         <path d="M-60,-70 L60,16 M60,-70 L-60,16" stroke="#2c2011" stroke-width="7"/>
         <rect x="-60" y="-70" width="120" height="86" rx="4" fill="none" stroke="#2c2011" stroke-width="7"/>
-        <rect x="-42" y="-130" width="86" height="62" rx="4" fill="#5a4527"/>
-        <rect x="-42" y="-130" width="86" height="62" rx="4" fill="none" stroke="#33260f" stroke-width="6"/>
-        <text x="0" y="-92" font-size="26" fill="#2c2011" text-anchor="middle" font-family="Georgia">GH</text>
+        ${f.crateOpen ? `
+        <g id="dk-crate-open">
+          <rect x="-42" y="-118" width="86" height="50" rx="4" fill="#4a3a20" stroke="#33260f" stroke-width="6"/>
+          <ellipse cx="1" cy="-116" rx="38" ry="9" fill="#150e05"/>
+          <g stroke="#c9a24a" stroke-width="2.5" opacity=".8">
+            <path d="M-24,-118 L-30,-132 M-8,-116 L-4,-134 M14,-117 L22,-130 M30,-118 L26,-131"/>
+          </g>
+          <g transform="translate(74,-92) rotate(26)">
+            <rect x="-42" y="-7" width="84" height="14" rx="3" fill="#5a4527" stroke="#33260f" stroke-width="5"/>
+          </g>
+          <text x="-6" y="-38" font-size="24" fill="#2c2011" text-anchor="middle" font-family="Georgia">GH</text>
+          <path d="M-24,-46 L12,-46" stroke="#6e2418" stroke-width="4"/>
+          <text x="26" y="-36" font-size="30" fill="#6e2418" text-anchor="middle" font-family="Georgia" font-weight="bold">V</text>
+        </g>` : `
+        <g id="dk-crate-closed">
+          <rect x="-42" y="-130" width="86" height="62" rx="4" fill="#5a4527"/>
+          <rect x="-42" y="-130" width="86" height="62" rx="4" fill="none" stroke="#33260f" stroke-width="6"/>
+          <text x="0" y="-92" font-size="26" fill="#2c2011" text-anchor="middle" font-family="Georgia">GH</text>
+        </g>`}
       </g>
       <!-- Marta -->
       <g transform="translate(408,760)">
@@ -151,7 +167,7 @@ const Art = (() => {
   }
 
   /* ------------------------------------------------ EXTERIOR */
-  function exterior() {
+  function exterior(f = {}) {
     const defs = `
       <linearGradient id="ex-sky" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#060a1c"/><stop offset="70%" stop-color="#14204a"/><stop offset="100%" stop-color="#23335f"/>
@@ -236,11 +252,12 @@ const Art = (() => {
           <ellipse cx="-14" cy="2" rx="26" ry="15"/><ellipse cx="40" cy="2" rx="25" ry="14"/><ellipse cx="13" cy="-22" rx="25" ry="14"/>
         </g>
         <g fill="#6b5230"><ellipse cx="-40" cy="26" rx="14" ry="8"/><ellipse cx="14" cy="28" rx="14" ry="8"/><ellipse cx="66" cy="26" rx="13" ry="7"/><ellipse cx="-14" cy="2" rx="14" ry="8"/><ellipse cx="40" cy="2" rx="13" ry="7"/><ellipse cx="13" cy="-22" rx="13" ry="7"/></g>
-        <g transform="translate(58,-40) rotate(-24)">
+        ${f.gotPrybar ? '' : `
+        <g id="ex-prybar" transform="translate(58,-40) rotate(-24)">
           <rect x="-4" y="-38" width="8" height="76" rx="4" fill="#7d8896"/>
           <path d="M-4,-38 Q-16,-46 -12,-56 L0,-48 Z" fill="#7d8896"/>
           <animate attributeName="opacity" values="1;.55;1" dur="2.6s" repeatCount="indefinite"/>
-        </g>
+        </g>`}
       </g>
       <!-- fence -->
       <g stroke="#242c38" stroke-width="8" opacity=".9">
@@ -263,7 +280,7 @@ const Art = (() => {
   }
 
   /* ------------------------------------------------ COTTAGE INTERIOR */
-  function cottage() {
+  function cottage(f = {}) {
     const defs = `
       <linearGradient id="ct-wall" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#3a2f2a"/><stop offset="100%" stop-color="#52413a"/>
@@ -327,12 +344,14 @@ const Art = (() => {
       <!-- shelf with oil can -->
       <g transform="translate(712,520)">
         <path d="M-66,26 L66,26 L66,36 L-66,36 Z" fill="#2c1d10"/>
-        <g transform="translate(-30,24)">
+        ${f.gotOil ? `
+        <ellipse id="ct-oilring" cx="-30" cy="22" rx="13" ry="4" fill="none" stroke="#1c1208" stroke-width="2" opacity=".8"/>` : `
+        <g id="ct-oilcan" transform="translate(-30,24)">
           <path d="M-14,0 L14,0 L11,-34 L-11,-34 Z" fill="#5f6b4a"/>
           <path d="M-11,-34 L11,-34 L6,-42 L-6,-42 Z" fill="#4a5439"/>
           <path d="M6,-40 L22,-52" stroke="#4a5439" stroke-width="5" stroke-linecap="round"/>
           <circle cx="0" cy="-16" r="7" fill="#3c452e"/>
-        </g>
+        </g>`}
         <g transform="translate(34,24)">
           <rect x="-12" y="-30" width="24" height="30" rx="3" fill="#37424f"/>
           <rect x="-8" y="-26" width="16" height="10" fill="#202730"/>
@@ -379,9 +398,20 @@ const Art = (() => {
       <g transform="translate(630,860)">
         <path d="M-130,-58 L130,-58 L130,-38 L-130,-38 Z" fill="#4a3018"/>
         <path d="M-118,-38 L118,-38 L110,120 L-110,120 Z" fill="#3a2410"/>
+        ${f.drawerOpen ? `
+        <rect x="-84" y="-24" width="168" height="44" rx="5" fill="#120b04"/>
+        <g transform="translate(0,30)">
+          <rect x="-84" y="-24" width="168" height="44" rx="5" fill="#54371c" stroke="#241708" stroke-width="3"/>
+          <rect x="-74" y="-18" width="148" height="30" rx="4" fill="#241505"/>
+          <circle cx="0" cy="-2" r="8" fill="#c9a24a"/>
+          <g transform="translate(-40,-6)">
+            <path d="M0,6 Q6,-2 12,4" stroke="#5a5230" stroke-width="2.5" fill="none"/>
+            <circle cx="14" cy="2" r="5" fill="#b5762a"/>
+          </g>
+        </g>` : `
         <rect x="-84" y="-24" width="168" height="44" rx="5" fill="#54371c" stroke="#241708" stroke-width="3"/>
         <circle cx="0" cy="-2" r="8" fill="#c9a24a"/>
-        <rect x="-24" y="-8" width="48" height="12" rx="3" fill="#2c1a0a"/>
+        <rect x="-24" y="-8" width="48" height="12" rx="3" fill="#2c1a0a"/>`}
         <!-- items on desk -->
         <g transform="translate(-78,-70)">
           <rect x="-24" y="0" width="48" height="12" rx="2" fill="#6e5a2e"/>
@@ -551,6 +581,11 @@ const Art = (() => {
           <circle cx="8" cy="22" r="9" fill="#0d0a06"/>
           <path d="M8,-6 L8,50 M-20,22 L36,22" stroke="#191108" stroke-width="6"/>
           <path d="M-14,26 Q-60,40 -96,34" stroke="#1c150c" stroke-width="6" fill="none"/>
+          ${gateOpen ? `
+          <g id="cl-crank" transform="translate(8,22) rotate(-40)">
+            <rect x="-4" y="-34" width="8" height="38" rx="4" fill="#7a6248"/>
+            <rect x="-4" y="-42" width="26" height="9" rx="4" fill="#5a4632"/>
+          </g>` : ''}
         </g>
       </g>
       <!-- stone stair from top left -->
@@ -650,6 +685,190 @@ const Art = (() => {
         <path d="M-96,-6 Q0,30 100,-10 L80,26 Q0,48 -74,28 Z" fill="#2c2033"/>
         <path d="M-96,-6 Q0,26 100,-10 L96,-2 Q0,34 -90,2 Z" fill="#54394a"/>
         <path d="M-30,4 L-64,-34" stroke="#3a2b3f" stroke-width="6" stroke-linecap="round"/>
+      </g>`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ PROLOGUE SLIDES */
+  function prologue(n) {
+    if (n === 1) {
+      /* Alvar at his desk, writing by candlelight */
+      const defs = `
+        <linearGradient id="p1-wall" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#170f0a"/><stop offset="100%" stop-color="#2c1d14"/>
+        </linearGradient>
+        <radialGradient id="p1-candle" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffcf72" stop-opacity=".75"/><stop offset="55%" stop-color="#ff9b3d" stop-opacity=".22"/><stop offset="100%" stop-color="#ff9b3d" stop-opacity="0"/>
+        </radialGradient>`;
+      const body = `
+        <rect width="800" height="1200" fill="url(#p1-wall)"/>
+        <!-- window with moon (prologue fills the whole screen, so keep
+             everything inside x 130..670 for the phone crop) -->
+        <g transform="translate(300,290)">
+          <rect x="-90" y="-110" width="180" height="220" rx="6" fill="#0d0a08"/>
+          <rect x="-78" y="-98" width="156" height="196" fill="#1d2745"/>
+          <circle cx="34" cy="-40" r="26" fill="#e9edf8"/>
+          <path d="M0,-98 L0,98 M-78,0 L78,0" stroke="#0d0a08" stroke-width="9"/>
+        </g>
+        <!-- desk -->
+        <path d="M100,840 L700,840 L682,880 L118,880 Z" fill="#3a2410"/>
+        <path d="M150,880 L176,1200 M650,880 L626,1200" stroke="#241708" stroke-width="22"/>
+        <!-- candle -->
+        <g transform="translate(200,820)">
+          <circle cx="0" cy="-90" r="190" fill="url(#p1-candle)">
+            <animate attributeName="opacity" values="1;.72;.92;.68;1" dur="3.2s" repeatCount="indefinite"/>
+          </circle>
+          <rect x="-13" y="-64" width="26" height="66" rx="5" fill="#e7dcc2"/>
+          <path d="M-13,-64 Q-2,-72 13,-62 L13,-56 L-13,-56 Z" fill="#d8c9a4"/>
+          <path d="M0,-66 L0,-76" stroke="#241708" stroke-width="3"/>
+          <path d="M0,-76 Q-9,-92 0,-108 Q10,-94 0,-76" fill="#ffb54d">
+            <animate attributeName="opacity" values="1;.8;1;.85;1" dur=".9s" repeatCount="indefinite"/>
+          </path>
+          <path d="M0,-80 Q-4,-90 0,-99 Q5,-91 0,-80" fill="#fff3c4">
+            <animate attributeName="opacity" values=".95;.6;.95" dur=".6s" repeatCount="indefinite"/>
+          </path>
+          <path d="M-16,0 L16,0 L12,10 L-12,10 Z" fill="#8a6a34"/>
+        </g>
+        <!-- paper being written, lines draw on -->
+        <g transform="translate(390,806) rotate(-4)">
+          <rect x="-110" y="-74" width="220" height="148" rx="4" fill="#efe6cf"/>
+          <rect x="-110" y="-74" width="220" height="148" rx="4" fill="none" stroke="#c9b98e" stroke-width="2"/>
+          <g stroke="#4a3826" stroke-width="3" fill="none" stroke-linecap="round">
+            <path pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M-88,-48 q10,-6 20,0 t20,0 t20,0 t20,0 t20,0 t20,0 t20,0 t20,0">
+              <animate attributeName="stroke-dashoffset" from="100" to="0" begin="0.6s" dur="1.6s" fill="freeze"/>
+            </path>
+            <path pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M-88,-16 q10,-6 20,0 t20,0 t20,0 t20,0 t20,0 t20,0 t20,0">
+              <animate attributeName="stroke-dashoffset" from="100" to="0" begin="2.3s" dur="1.5s" fill="freeze"/>
+            </path>
+            <path pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M-88,16 q10,-6 20,0 t20,0 t20,0 t20,0 t20,0">
+              <animate attributeName="stroke-dashoffset" from="100" to="0" begin="3.9s" dur="1.3s" fill="freeze"/>
+            </path>
+            <path pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M-88,48 q10,-6 20,0 t20,0 t20,0">
+              <animate attributeName="stroke-dashoffset" from="100" to="0" begin="5.3s" dur="1.1s" fill="freeze"/>
+            </path>
+          </g>
+        </g>
+        <!-- inkwell -->
+        <g transform="translate(548,812)">
+          <path d="M-16,10 L16,10 L12,-14 Q0,-22 -12,-14 Z" fill="#141a26"/>
+          <ellipse cx="0" cy="-14" rx="9" ry="4" fill="#060913"/>
+        </g>
+        <!-- Alvar in profile, hunched over the letter, quill hand moving -->
+        <g transform="translate(560,660)">
+          <path d="M-56,220 Q-68,70 -8,32 Q64,2 100,80 L112,220 Z" fill="#0f0a06"/>
+          <circle cx="-26" cy="10" r="44" fill="#0f0a06"/>
+          <path d="M-64,-12 Q-28,-42 12,-18 L14,-4 Q-24,-24 -60,2 Z" fill="#1d1207"/>
+          <path d="M-70,16 L-46,20" stroke="#b8bfcc" stroke-width="7" stroke-linecap="round" opacity=".85"/>
+          <path d="M-4,64 Q-64,86 -114,112" stroke="#0f0a06" stroke-width="26" fill="none" stroke-linecap="round"/>
+          <g transform="translate(-122,118)">
+            <animateTransform attributeName="transform" type="translate" values="-122,118;-128,121;-117,117;-124,122;-122,118" dur="1.4s" repeatCount="indefinite"/>
+            <circle cx="0" cy="0" r="13" fill="#0f0a06"/>
+            <path d="M2,-4 Q20,-46 40,-66 L45,-60 Q26,-40 10,-2 Z" fill="#cfc4a0"/>
+          </g>
+        </g>`;
+      return wrap(defs, body);
+    }
+    if (n === 2) {
+      /* the letter itself, ending mid-sentence */
+      const defs = `
+        <radialGradient id="p2-vig" cx="50%" cy="46%" r="72%">
+          <stop offset="0%" stop-color="#f2e8cf"/><stop offset="72%" stop-color="#dcc9a0"/><stop offset="100%" stop-color="#6e5a38"/>
+        </radialGradient>`;
+      let lines = '';
+      const ys = [230, 300, 370, 440, 510];
+      ys.forEach((y, i) => {
+        lines += `<path pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"
+          d="M140,${y} q14,-8 28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0 t28,0">
+          <animate attributeName="stroke-dashoffset" from="100" to="0" begin="${(0.2 + i * 0.45).toFixed(2)}s" dur="0.5s" fill="freeze"/>
+        </path>`;
+      });
+      const body = `
+        <rect width="800" height="1200" fill="url(#p2-vig)"/>
+        <g stroke="#5a4a2c" stroke-width="3.5" fill="none" stroke-linecap="round" opacity=".8">
+          ${lines}
+        </g>
+        <text x="150" y="640" font-size="34" font-family="Georgia" font-style="italic" fill="#3a2c14" opacity="0">
+          The harbor is not what it
+          <animate attributeName="opacity" from="0" to="1" begin="2.5s" dur=".7s" fill="freeze"/>
+        </text>
+        <text x="150" y="695" font-size="34" font-family="Georgia" font-style="italic" fill="#3a2c14" opacity="0">
+          was, Kel. If anything
+          <animate attributeName="opacity" from="0" to="1" begin="2.8s" dur=".7s" fill="freeze"/>
+        </text>
+        <text x="150" y="750" font-size="34" font-family="Georgia" font-style="italic" fill="#3a2c14" opacity="0">
+          should happen to me&#8212;
+          <animate attributeName="opacity" from="0" to="1" begin="3.1s" dur=".7s" fill="freeze"/>
+        </text>
+        <!-- the ink trails off -->
+        <g opacity="0">
+          <animate attributeName="opacity" from="0" to="1" begin="3.7s" dur=".5s" fill="freeze"/>
+          <path d="M566,742 q26,10 52,24" stroke="#3a2c14" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <circle cx="622" cy="770" r="0" fill="#2c2011">
+            <animate attributeName="r" from="0" to="13" begin="3.9s" dur=".45s" fill="freeze"/>
+          </circle>
+          <circle cx="642" cy="786" r="0" fill="#2c2011">
+            <animate attributeName="r" from="0" to="5" begin="4.2s" dur=".3s" fill="freeze"/>
+          </circle>
+        </g>
+        <g stroke="#5a4a2c" stroke-width="3.5" fill="none" stroke-linecap="round" opacity=".35">
+          <path d="M150,880 q14,-8 28,0 t28,0 t28,0" opacity="0">
+            <animate attributeName="opacity" from="0" to=".6" begin="4.6s" dur="1s" fill="freeze"/>
+          </path>
+        </g>`;
+      return wrap(defs, body);
+    }
+    /* n === 3: Kel on the mail boat, heading north at dawn */
+    const defs = `
+      <linearGradient id="p3-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1a2547"/><stop offset="62%" stop-color="#7a5a72"/><stop offset="100%" stop-color="#d69a6a"/>
+      </linearGradient>
+      <linearGradient id="p3-sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#b8825e"/><stop offset="25%" stop-color="#4a4270"/><stop offset="100%" stop-color="#141b30"/>
+      </linearGradient>`;
+    const body = `
+      <rect width="800" height="720" fill="url(#p3-sky)"/>
+      <circle cx="400" cy="700" r="120" fill="#ffdf9a" opacity=".55"/>
+      <!-- distant headland + lighthouse -->
+      <path d="M440,720 L480,664 Q540,626 620,620 L800,610 L800,720 Z" fill="#1d1a30"/>
+      <g transform="translate(600,622)">
+        <path d="M-9,0 L9,0 L6,-40 L-6,-40 Z" fill="#2a2244"/>
+        <circle cx="0" cy="-36" r="5" fill="#ffe9a8">
+          <animate attributeName="opacity" values="1;.3;1" dur="3s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+      <rect y="720" width="800" height="480" fill="url(#p3-sea)"/>
+      <g opacity=".5" stroke="#d8a274" stroke-width="2.5" fill="none">
+        <path d="M80,780 q40,-7 84,0 t76,0"><animate attributeName="opacity" values=".5;.15;.5" dur="4.4s" repeatCount="indefinite"/></path>
+        <path d="M420,850 q46,-8 92,0 t84,0"><animate attributeName="opacity" values=".15;.5;.15" dur="5.6s" repeatCount="indefinite"/></path>
+      </g>
+      <!-- gulls -->
+      <g stroke="#e8e4d8" stroke-width="4" fill="none" stroke-linecap="round">
+        <g><path d="M240,300 q12,-14 24,0 q12,-14 24,0"/>
+          <animateTransform attributeName="transform" type="translate" values="0,0;36,-14;0,0" dur="7s" repeatCount="indefinite"/></g>
+        <g><path d="M480,220 q9,-11 18,0 q9,-11 18,0"/>
+          <animateTransform attributeName="transform" type="translate" values="0,0;-30,10;0,0" dur="9s" repeatCount="indefinite"/></g>
+      </g>
+      <!-- the boat, bobbing, Kel reading at the rail -->
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0,0;0,12;0,0" dur="5s" repeatCount="indefinite"/>
+        <path d="M0,1200 L0,980 Q170,930 400,940 Q640,950 800,1010 L800,1200 Z" fill="#241a24"/>
+        <path d="M0,980 Q170,930 400,940 Q640,950 800,1010 L800,1040 Q640,982 400,972 Q170,962 0,1010 Z" fill="#3d2b3f"/>
+        <path d="M180,952 L180,700" stroke="#241a24" stroke-width="14"/>
+        <path d="M187,706 L320,860 L187,860 Z" fill="#8d7f96" opacity=".9"/>
+        <!-- Kel -->
+        <g transform="translate(430,810)" fill="#141a2a">
+          <path d="M-24,160 L-20,44 Q-26,10 0,4 Q28,10 24,44 L28,160 Z"/>
+          <circle cx="1" cy="-16" r="24"/>
+          <path d="M-20,-28 Q0,-46 22,-26 L22,-14 Q0,-30 -18,-14 Z" fill="#0d1120"/>
+          <path d="M-20,60 Q-46,74 -58,96 L-50,102 Q-36,82 -14,72 Z"/>
+          <path d="M20,60 Q46,74 58,96 L50,102 Q36,82 14,72 Z"/>
+          <g transform="translate(-52,102) rotate(-14)">
+            <rect x="-26" y="-34" width="60" height="42" rx="3" fill="#efe6cf"/>
+            <g stroke="#8a7a56" stroke-width="2" opacity=".8">
+              <path d="M-18,-24 h44 M-18,-16 h44 M-18,-8 h38 M-18,0 h44"/>
+            </g>
+          </g>
+        </g>
       </g>`;
     return wrap(defs, body);
   }
@@ -803,5 +1022,5 @@ const Art = (() => {
     lighthousekey: icon(`<g transform="rotate(-35 24 24)"><path d="M24,3 L30,11 L27,11 L27,15 L21,15 L21,11 L18,11 Z" fill="#c98a2e"/><circle cx="24" cy="11" r="8" fill="none" stroke="#c98a2e" stroke-width="4"/><rect x="22" y="18" width="4.5" height="23" fill="#c98a2e"/><rect x="26" y="31" width="8" height="4.5" fill="#c98a2e"/><rect x="26" y="38" width="6" height="4" fill="#c98a2e"/></g>`),
   };
 
-  return { dock, exterior, cottage, lamp, cliffs, cave, title, ending, portraits, icons };
+  return { dock, exterior, cottage, lamp, cliffs, cave, prologue, title, ending, portraits, icons };
 })();
