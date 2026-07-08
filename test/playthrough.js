@@ -123,7 +123,11 @@ function ok(cond, msg) {
       });
       if (st.closed) return { closed: true };
       if (st.choices.length) return { closed: false, choices: st.choices };
-      await page.locator('#dialog-overlay').click({ position: { x: Math.floor(vw / 2), y: vh - 90 } });
+      // short timeout + swallow: the ending screen can legitimately replace
+      // the dialogue mid-loop (endGame), which retracts the click target
+      await page.locator('#dialog-overlay')
+        .click({ position: { x: Math.floor(vw / 2), y: vh - 90 }, timeout: 1500 })
+        .catch(() => {});
     }
     throw new Error('dialogue never resolved');
   }
@@ -393,18 +397,22 @@ function ok(cond, msg) {
   console.log('\n== Post-game & Chapter Two unlock ==');
   await page.waitForTimeout(1800); // let the unlock banner fade in
   ok(await page.locator('.unlock-banner').isVisible(), 'ending announces Chapter Two unlock');
-  await page.locator('#btn-again').click();
-  await page.waitForTimeout(400);
-  ok(await page.locator('#title-screen').isVisible(), 'back to title');
-  ok(await page.locator('#btn-continue').isHidden(), 'save cleared after finishing');
-  ok(await page.locator('#lock-ch2').isHidden(), 'Chapter Two no longer locked');
-  ok(await page.locator('#btn-new-ch2').isVisible(), 'Chapter Two can now be started');
-  ok((await page.locator('#card-ch1 .chapter-done').textContent()).includes('solved'), 'Chapter One marked solved');
-  await shot('18-title-ch2-unlocked');
+  // the action buttons must be reachable WITHOUT scrolling — a phone user
+  // gets no scroll hint on the ending screen (regression: v1.3)
+  const endScroll = await page.evaluate(() => document.getElementById('ending-screen').scrollTop);
+  const nextBox = await page.locator('#btn-next-chapter').boundingBox();
+  const menuBox = await page.locator('#btn-again').boundingBox();
+  ok(endScroll === 0 && nextBox && nextBox.y >= 0 && nextBox.y + nextBox.height <= vh,
+    'Begin Chapter Two button fully on screen without scrolling');
+  ok(menuBox && menuBox.y >= 0 && menuBox.y + menuBox.height <= vh,
+    'Main Menu button fully on screen without scrolling');
+  ok((await page.locator('#btn-next-chapter').textContent()).includes('Begin Chapter Two'), 'primary button offers Chapter Two');
+  ok((await page.locator('#btn-again').textContent()) === 'Main Menu', 'secondary button returns to the menu');
+  await shot('18-ch1-ending-buttons');
 
-  console.log('\n== CHAPTER TWO: The Silent Bell ==');
+  console.log('\n== CHAPTER TWO: The Silent Bell (straight from the ending) ==');
   SAVEKEY = 'greyharbor_save_ch2_v1';
-  await page.locator('#btn-new-ch2').click();
+  await page.locator('#btn-next-chapter').click();
   await page.waitForTimeout(500);
   ok(await page.locator('#prologue-screen').isVisible(), 'ch2 prologue plays');
   const q1 = await page.locator('#prologue-caption').textContent();
@@ -495,8 +503,9 @@ function ok(cond, msg) {
   await tap2('b_bell');
   ok(await page.locator('#bell-svg').isVisible(), 'bell-ringing puzzle opens');
   await shot('23-ch2-bellpuzzle');
-  // deliberately pull at the wrong moment
-  await page.waitForFunction(() => document.getElementById('bell-svg').dataset.inzone === '0');
+  // deliberately pull at the wrong moment (bottom of the swing, far from
+  // the zone so click latency can't accidentally land a good pull)
+  await page.waitForFunction(() => Math.abs(parseFloat(document.getElementById('bell-svg').dataset.phase || '1')) < 0.15);
   await page.locator('.bell-pull-btn').click();
   ok((await page.locator('#puzzle-panel .solved-note').textContent()).includes('Too soon'), 'early pull is rejected');
   ok(await page.evaluate(() => document.querySelectorAll('.bell-pip.hit').length === 0), 'no progress from a bad pull');
@@ -524,9 +533,17 @@ function ok(cond, msg) {
   await shot('24-ch2-ending');
   const meta = await page.evaluate(() => JSON.parse(localStorage.getItem('greyharbor_meta_v1')));
   ok(meta.ch1Done === true && meta.ch2Done === true, 'both chapters recorded as finished');
+  ok(await page.locator('#btn-next-chapter').isHidden(), 'no next-chapter button after the final chapter');
+  const mb2 = await page.locator('#btn-again').boundingBox();
+  ok(mb2 && mb2.y + mb2.height <= vh, 'Main Menu button on screen at ch2 ending');
   await page.locator('#btn-again').click();
   await page.waitForTimeout(400);
+  ok(await page.locator('#title-screen').isVisible(), 'back at the main menu');
+  ok(await page.locator('#lock-ch2').isHidden(), 'Chapter Two shown unlocked on title');
+  ok(await page.locator('#btn-new-ch2').isVisible(), 'Chapter Two startable from title');
+  ok((await page.locator('#card-ch1 .chapter-done').textContent()).includes('solved'), 'Chapter One marked solved');
   ok((await page.locator('#card-ch2 .chapter-done').textContent()).includes('solved'), 'Chapter Two marked solved on title');
+  await shot('18-title-both-solved');
 
   console.log('\n== Save/continue mid-game ==');
   SAVEKEY = 'greyharbor_save_v1';

@@ -234,15 +234,33 @@
       el.endingText.appendChild(par);
       setTimeout(() => { par.style.opacity = '1'; }, 600 + i * 1500);
     });
+    /* action buttons — always visible, never below the fold */
+    const btns = $('ending-buttons');
+    btns.innerHTML = '';
     if (unlocksCh2) {
       const b = document.createElement('div');
       b.className = 'unlock-banner';
       b.textContent = '✦ Chapter Two unlocked: ' + Chapters.ch2.name;
       b.style.opacity = '0';
       b.style.transition = 'opacity 1.2s ease';
-      el.endingText.appendChild(b);
-      setTimeout(() => { b.style.opacity = '1'; }, 600 + cfg.text.length * 1500);
+      btns.appendChild(b);
+      setTimeout(() => { b.style.opacity = '1'; }, 1200);
     }
+    if (chapterId === 'ch1' && Chapters.ch2) {
+      const hasCh2Save = !!loadSave('ch2');
+      const nx = document.createElement('button');
+      nx.className = 'btn btn-primary';
+      nx.id = 'btn-next-chapter';
+      nx.textContent = (hasCh2Save ? 'Continue Chapter Two' : 'Begin Chapter Two') + ' ▸';
+      nx.addEventListener('click', () => startGame(!hasCh2Save, 'ch2'));
+      btns.appendChild(nx);
+    }
+    const menuBtn = document.createElement('button');
+    menuBtn.className = 'btn' + (btns.children.length ? '' : ' btn-primary');
+    menuBtn.id = 'btn-again';
+    menuBtn.textContent = 'Main Menu';
+    menuBtn.addEventListener('click', showTitle);
+    btns.appendChild(menuBtn);
   }
 
   /* ---------------- scene rendering ---------------- */
@@ -734,6 +752,7 @@
       bellG.style.transform = 'rotate(' + (phase * MAXDEG).toFixed(2) + 'deg)';
       const inzone = Math.abs(phase) > 0.82;
       svg.dataset.inzone = inzone ? '1' : '0';
+      svg.dataset.phase = phase.toFixed(3);
       zoneL.setAttribute('stroke', inzone && phase < 0 ? '#e8b44a' : '#9a7a3a');
       zoneR.setAttribute('stroke', inzone && phase > 0 ? '#e8b44a' : '#9a7a3a');
       requestAnimationFrame(frame);
@@ -776,7 +795,7 @@
   function init() {
     showTitle();
 
-    $('btn-again').addEventListener('click', () => { showTitle(); });
+    // (ending-screen buttons are built dynamically in showEnding)
 
     $('btn-menu').addEventListener('click', () => el.menuOverlay.classList.remove('hidden'));
     $('btn-journal').addEventListener('click', openJournal);

@@ -420,9 +420,16 @@ html, body {
 #ending-screen .title-content { flex: 0 0 auto; }
 #ending-text {
   font-size: 16px; line-height: 1.65; font-style: italic;
-  max-width: 420px; margin: 0 auto 24px; opacity: .9;
+  max-width: 420px; margin: 0 auto 20px; opacity: .9;
   text-align: center;
+  /* the epilogue scrolls inside its own box so the buttons below it
+     are ALWAYS on screen, on any phone */
+  overflow-y: auto;
+  max-height: 40vh;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 4px;
 }
+#ending-buttons .btn { min-width: 250px; }
 
 /* toast */
 #toast {
@@ -453,6 +460,7 @@ html, body {
 @media (max-height: 640px) {
   .game-title { font-size: 34px; }
   .small-title { font-size: 26px; }
-  #ending-text { font-size: 14px; line-height: 1.5; }
+  #ending-text { font-size: 14px; line-height: 1.5; max-height: 30vh; }
   .title-content { padding-top: 12px; }
+  .unlock-banner { margin-bottom: 8px; padding: 8px 12px; font-size: 13.5px; }
 }
