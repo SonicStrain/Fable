@@ -1,7 +1,7 @@
 # The Mysteries of Grey Harbor
 
-A two-chapter point-&-click mystery game for **Android and iOS**. Lightweight
-(the whole game is ~180 KB of hand-crafted SVG art and vanilla JavaScript — no
+A three-chapter point-&-click mystery game for **Android and iOS**. Lightweight
+(the whole game is ~220 KB of hand-crafted SVG art and vanilla JavaScript — no
 engine, no frameworks, fully offline), atmospheric, and story-driven.
 
 > **Chapter One — The Keeper of Grey Harbor.** Your uncle Alvar kept the
@@ -12,29 +12,46 @@ engine, no frameworks, fully offline), atmospheric, and story-driven.
 > Winter fog swallows the harbor, Marta's midnight ferry is feeling her way
 > home — and for the first time in eighty years, the fog bell of Bell Rock
 > is silent.
+>
+> **Chapter Three — The Wreck of the Marigold** *(unlocked by finishing
+> Chapter Two)*. The storm of the century is bearing down, Voss will finally
+> talk, and everything — the darkened light, the silenced bell, a ship lost
+> in 1893 — turns out to be one story. Light and bell against the storm, in
+> an animated finale that ties every thread together.
 
 ## The game
 
-- **Two chapters, nine scenes** — from the dusk dock and the smuggler's sea
-  cave to the fog-bound shore and Bell Rock itself, with an animated
-  prologue cutscene opening each chapter.
-- **6 puzzles** — a code lock fed by a stopped clock, a Caesar-wheel cipher,
-  a lens-alignment mechanism, a rusted winch, a storm-year padlock, and a
-  bell you must ring in time with its swing.
+- **Three chapters, fourteen scenes** — from the dusk dock and the
+  smuggler's sea cave, through the fog-bound shore and Bell Rock, to the
+  storm-lashed dock, Voss's lock-up, and a climactic finale — each chapter
+  opening with its own animated cutscene.
+- **8 puzzles** — a code lock fed by a stopped clock, a Caesar-wheel cipher,
+  a lens-alignment mechanism, a rusted winch, a storm-year padlock, a bell
+  you must ring in time with its swing, a hidden relay lock, and a
+  rotating flywheel you must catch to charge the storm reserve.
+- **Animated story cutscenes** at the start of every chapter and driving
+  Chapter Three's finale — full-screen scenes with drawn-on ink, flickering
+  candlelight, drifting fog, driving storm rain and lightning, and a
+  multi-slide climax (the light and bell overwhelming a smuggler's
+  schooner, the harbor closing in, dawn breaking over the recovered chest)
+  — tap to advance, or Skip straight to the point.
 - **Branching dialogue** with the folk of Grey Harbor, a field-notes journal
   that tracks clues and your current objective, tap-to-use inventory, and a
   hotspot hint button.
-- **Save & continue** — progress saves automatically on every action, the
-  menu has an explicit "Save & Exit to Title", and the title screen's
-  Continue button shows exactly where you left off.
+- **Save & continue per chapter** — progress saves automatically on every
+  action, the menu has an explicit "Save & Exit to Title", the title screen
+  is a chapter-select showing lock state and "✓ solved" badges, and each
+  chapter's ending offers a direct "Begin/Continue Next Chapter ▸" button.
 - **A procedural soundtrack** — every scene has its own generative ambient
   score (dusk harbor waves, a music-box cottage, wind on the black cliffs,
-  echoing cave drips), synthesized live with WebAudio so it adds zero bytes
-  of assets. Toggle it with the ♪ button on the title screen, in the top
-  bar, or from the menu; the preference is remembered.
+  echoing cave drips, a muffled fog hush, a tense storm), synthesized live
+  with WebAudio — including a real bronze bell strike and a metallic
+  flywheel clank — so it adds zero bytes of assets. Toggle it with the ♪
+  button on the title screen, in the top bar, or from the menu; the
+  preference is remembered.
 - All art is procedural inline SVG with subtle ambient animation (sweeping
-  beams, flickering fires, drifting waves) — crisp at any resolution and
-  battery-friendly.
+  beams, flickering fires, drifting waves, driving rain) — crisp at any
+  resolution and battery-friendly.
 
 ## Builds
 
@@ -96,8 +113,8 @@ from the iPhone SE to a 21:9 Sony to an iPad:
 
 ```bash
 npm install
-node test/playthrough.js            # full story, 63 assertions (VP=320x568 to vary viewport)
-node test/reachability.js           # every hotspot tappable on 9 viewports
+node test/playthrough.js            # all 3 chapters, 210+ assertions (VP=320x568 to vary viewport)
+node test/reachability.js           # every hotspot tappable on 9 viewports, all 14 scenes
 node test/gen-icons.js              # regenerate app icons/splashes from SVG
 ```
 

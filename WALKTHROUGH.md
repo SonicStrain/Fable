@@ -5,9 +5,10 @@
 > flashes every interactive spot in the scene, and your **Field Notes**
 > (pencil button) always show your current objective.
 
-The game has two chapters. **Chapter One: The Keeper of Grey Harbor** is
+The game has three chapters. **Chapter One: The Keeper of Grey Harbor** is
 available from the start; finishing it unlocks **Chapter Two: The Silent
-Bell**. Each chapter keeps its own save, so you can replay either any time.
+Bell**, which unlocks **Chapter Three: The Wreck of the Marigold**. Each
+chapter keeps its own save, so you can replay any of them any time.
 
 ## How the game works
 
@@ -169,6 +170,89 @@ should warn her off the rocks has gone silent.
 **All Chapter Two field notes:** The midnight ferry (Alvar's briefing) ·
 The notice board · The jetty plaque · The silent bell (tap the bell) ·
 The thief (tap the nest) · A thief's hoard (loot the nest).
+
+---
+
+# Chapter Three — The Wreck of the Marigold
+
+*Unlocked by finishing Chapter Two.* By spring, the storm of the century is
+bearing down on Grey Harbor — and Voss, awaiting trial, sends word that he
+will speak. Only to Kel, and only once.
+
+## Act 1 — The Lock-Up
+
+1. **Talk to Voss.** Either dialogue choice works — he tells you everything:
+   a stranger he calls **the Collector** paid him to darken the light, not
+   for cargo, but to keep ships away from **the Marigold**, wrecked in 1893
+   with the founding deed and the first keeper's chest. Tonight, under
+   cover of the storm, the Collector sails to raise her strongbox. Voss's
+   chart and the Collector's letters are hidden **under the floorboard by
+   his office stove**; the office key is **on the ledge above its door**.
+2. Leave the lock-up (the door only opens once you've heard him out).
+
+## Act 2 — The Storm-Lashed Dock
+
+1. **Talk to Marta**, lashing down the boats. She fills in the rest: the
+   Marigold carried **Elias Fane** — the first keeper, Alvar's
+   great-grandfather — home with the tower's founding deed. She sank in
+   sight of his own unfinished light.
+2. Take the **key from the ledge** above the harbor office door, then use
+   it on the **office door**.
+
+*(The cliff path stays closed until you know what you're looking for — go
+to the office first.)*
+
+## Act 3 — The Harbor Office
+
+1. Take the **fire iron** beside the stove.
+2. Use the **fire iron on the loose floorboard** → Voss's hand-drawn chart
+   and the Collector's cold, typed letters. The chart marks the shore relay
+   on the cliffs and notes: *"shutter lock is the year she sank."*
+3. Leave (the door back to the dock).
+
+## Act 4 — The Black Cliffs
+
+1. Tap the **shore relay** — a locked steel box, humming. Use the **fire
+   iron** on it to pry the access panel loose.
+2. Tap it again to open the keypad, and enter:
+
+   > **1893** *(the year the Marigold sank)*
+
+3. The shutter housing pops open and the beam runs full again.
+
+## Act 5 — The Lamp Room & the Finale
+
+1. **Talk to Alvar** at the telescope — he's already seen the relay die and
+   the beam return. He tells you the whole truth about the Marigold and
+   sets you on the **storm reserve flywheel**.
+2. Tap the **flywheel** to open the timing puzzle:
+
+   > Watch the wheel turn. **Tap CATCH exactly when the handle crosses the
+   > gold notch at the top.** Three clean catches charge the reserve.
+
+3. The finale plays automatically: the lens blazes, the bell answers, and
+   a black schooner is caught dead center in the beam. When the choice
+   comes, **either option wins** — the trap is already sprung:
+   - *"Let the light finish it."*
+   - *"Ring the bell once more — for Fane."*
+4. Watch the storm break and the Collector's schooner turn for the harbor
+   mouth — and the constable's launch waiting on the other side.
+
+## Chapter Three at a glance
+
+| Puzzle | Answer |
+|---|---|
+| Shore relay shutter | **1893** (the year the Marigold sank) |
+| Storm reserve | Catch the flywheel handle **at the top notch, ×3** |
+
+| Item | Where | Used on |
+|---|---|---|
+| Office key | Ledge above the harbor office door | Office door |
+| Fire iron | Beside the office stove | Loose floorboard, then the shore relay panel |
+
+**All Chapter Three field notes:** The Collector (Voss's confession) · Voss's
+hiding place · The Marigold (Marta's history) · The wreck chart · The
+Collector's letters · The shore relay (after disarming it).
 
 ---
 

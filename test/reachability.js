@@ -42,8 +42,20 @@ const SCENE_STATES = {
   shore_open: { b_shedOpen: true, b_hasHook: true },
   bellrock: {},
   bellrock_late: { b_seenBell: true, b_nestLooted: true, b_chainOn: true },
+  /* chapter three */
+  jail: {},
+  jail_met: { c_met: true },
+  dockstorm: { c_gotChart: true },
+  office: {},
+  office_done: { c_hasIron: true, c_gotChart: true },
+  cliffs3: { c_gotChart: true },
+  cliffs3_open: { c_gotChart: true, c_panelOpen: true, c_shutterOff: true },
+  lamp3: { c_shutterOff: true, c_alvarBriefed: true, c_wound: true },
 };
-const SCENE_OF = { cliffs_open: 'cliffs', shore_open: 'shore', bellrock_late: 'bellrock' };
+const SCENE_OF = {
+  cliffs_open: 'cliffs', shore_open: 'shore', bellrock_late: 'bellrock',
+  jail_met: 'jail', office_done: 'office', cliffs3_open: 'cliffs3',
+};
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });

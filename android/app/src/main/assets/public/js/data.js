@@ -17,6 +17,9 @@ const Items = {
   oars:         { name: 'Pair of oars',        icon: 'oars',         desc: 'Alvar\'s good spruce oars. "Row like you mean it," he always says.' },
   boathook:     { name: 'Boathook',            icon: 'boathook',     desc: 'A long pole with a brass hook. For catching mooring lines — or reaching things that would rather not be reached.' },
   strikerchain: { name: 'Striker chain',       icon: 'strikerchain', desc: 'The fog bell\'s silver striker chain, still tangled with a thief\'s treasure: a button, a ring-pull, and somebody\'s thimble.' },
+  /* ---- chapter three ---- */
+  officekey:    { name: 'Office key',          icon: 'cottagekey',   desc: 'The harbor office key, from the ledge above the door. Voss hid nothing well except cargo.' },
+  fireiron:     { name: 'Fire iron',           icon: 'fireiron',     desc: 'Voss\'s stove poker. Bent at the tip — ideal for arguing with nailed-down floorboards.' },
 };
 
 /* ---------------- Clues ---------------- */
@@ -38,6 +41,13 @@ const Clues = {
   b_frayed:   { title: 'The silent bell',      text: 'The bell rope is frayed to threads by the wind — and the silver striker chain is simply gone. Cut? No: the links were worked loose. Carried off.' },
   b_magpie:   { title: 'The thief',            text: 'A magpie keeps circling the crag, scolding you. Its nest glitters with everything shiny it could lift — including, unmistakably, a silver chain.' },
   b_trinkets: { title: 'A thief\'s hoard',     text: 'Besides the chain: a brass button, three ring-pulls, a thimble, and what appears to be Alvar\'s missing pipe-band. Case closed on that mystery, too.' },
+  /* ---- chapter three ---- */
+  c_collector:{ title: 'The Collector',        text: 'Voss confesses: every darkened night was bought and paid for by a stranger he calls the Collector — who wanted ships kept away from the black stretch where the Marigold sank. Tonight, IN the storm, the Collector sails to raise her strongbox.' },
+  c_floorboard:{ title: 'Voss\'s hiding place', text: '"The chart, the letters, everything — under the floorboard by my stove. Key\'s on the ledge, where keys always are. Go, boy. I dimmed lights. I never drowned men."' },
+  c_chart:    { title: 'The wreck chart',      text: 'A hand-drawn chart: the Marigold lies between Bell Rock and the black cliffs. Marked on the cliff path: "RELAY — shutter lock is the year she sank."' },
+  c_letters:  { title: 'The Collector\'s letters', text: 'Cold, typed instructions signed with a quill-feather stamp: payments, dates, and one line that chills you — "keep the coast dark until I have what is mine."' },
+  c_marigold: { title: 'The first keeper',     text: 'Marta: the Marigold carried Elias Fane — the FIRST keeper of Grey Harbor, Alvar\'s great-grandfather — home with the tower\'s founding deed and his sea letters. She sank in sight of his own unfinished light. 1893.' },
+  c_relay:    { title: 'The shore relay',      text: 'Voss\'s old shutter rig, re-armed by the Collector\'s hired man to blind the light tonight. Not any more: the shutter is off and the beam runs full.' },
 };
 
 /* ---------------- Objectives ---------------- */
@@ -72,6 +82,25 @@ function objective2(f) {
   if (!f.b_chainOn)    return 'Hang the striker chain back inside the bell.';
   if (!f.b_bellRung)   return 'Ring the bell! Pull when the swing is at its highest — three strong pulls will wake her.';
   return 'Listen.';
+}
+
+/* objective line for chapter three */
+function objective3(f) {
+  if (!f.c_met)        return 'The storm of the century is hours away — and Voss will speak only to you. Hear him out in the lock-up.';
+  if (!f.c_hasKey)     return 'Get into the harbor office on the dock. Voss said the key is "on the ledge, where keys always are".';
+  if (!f.c_officeOpen) return 'Use the key on the harbor office door.';
+  if (!f.c_gotChart) {
+    let o = 'Search the office: the chart and the Collector\'s letters are hidden under the floorboard by the stove.';
+    if (!f.c_hasIron) o += ' It\'s nailed down tight — the stove might have something to pry with.';
+    return o;
+  }
+  if (!f.c_shutterOff) {
+    let o = 'Take the cliff path and kill the Collector\'s relay before it blinds the light again.';
+    if (!f.c_panelOpen) o += ' The chart says its shutter lock is "the year she sank" — but the access panel is screwed down; that fire iron might help.';
+    return o;
+  }
+  if (!f.c_wound)      return 'Climb to the lamp room. Alvar needs your hands on the storm reserve — keep the light turning!';
+  return 'Light and bell against the storm. Watch.';
 }
 
 /* ---------------- Dialogue trees ---------------- */
@@ -200,9 +229,96 @@ const Dialogs = {
     text: 'Out of the fog come lights — a whole string of warm windows gliding safely wide of Bell Rock. On the crag above, one very indignant magpie files a formal complaint.',
     effect: g => g.endGame(),
     next: null },
+
+  /* ================= CHAPTER THREE ================= */
+  c_voss1: { speaker: 'Voss', portrait: 'voss',
+    text: 'The keeper\'s brat. Good. Sit down, don\'t gloat, and listen — because tonight the glass is falling like a stone, and there are things you don\'t know about your harbor.',
+    next: 'c_voss2' },
+  c_voss2: { speaker: 'Kel', portrait: 'kel',
+    text: 'You dimmed the light for cargo money, Voss. What\'s left to know?',
+    next: 'c_voss3' },
+  c_voss3: { speaker: 'Voss', portrait: 'voss',
+    text: 'Cargo money. Ha. The cargo barely paid the crew, boy. The real coin came from a stranger — signs his letters with a quill-feather stamp. Calls himself the Collector. He didn\'t care what I moved. He cared that ships stayed AWAY from the black stretch.',
+    next: 'c_voss_choice' },
+  c_voss_choice: { speaker: 'Voss', portrait: 'voss',
+    text: 'He leans close to the bars, and for the first time in his life, Voss looks afraid.',
+    choices: [
+      { label: '"Away from... what\'s down there?"', next: 'c_voss4' },
+      { label: '"Why tell me now?"', next: 'c_voss5' },
+    ] },
+  c_voss4: { speaker: 'Voss', portrait: 'voss',
+    text: 'The Marigold. The ship your light was BUILT for, wrecked in \'93 with the founding deed and the first keeper\'s chest aboard. The Collector has hunted her for years. My darkness kept his secret. Your lens and your bell ended it.',
+    next: 'c_voss5' },
+  c_voss5: { speaker: 'Voss', portrait: 'voss',
+    text: 'Tonight he sails INTO the storm to raise her strongbox — with a hired crew that\'s never seen these rocks. If your light fails tonight, they all drown, and I\'ll not have that on my slate. I dimmed lights, boy. I never drowned men.',
+    next: 'c_voss6' },
+  c_voss6: { speaker: 'Voss', portrait: 'voss',
+    text: 'His man re-armed my old relay on the cliffs — it\'ll blind your lamp at the worst hour. My chart, his letters, everything: under the floorboard by my office stove. Key\'s on the ledge, where keys always are. Run, Kel.',
+    effect: g => { g.setFlag('c_met'); g.addClue('c_collector'); g.addClue('c_floorboard'); },
+    next: null },
+  c_voss_again: { speaker: 'Voss', portrait: 'voss',
+    text: 'Still here? The glass is still falling, the relay\'s still armed, and my floorboard is still nailed down. RUN, boy.',
+    next: null },
+
+  c_marta1: { speaker: 'Marta', portrait: 'marta',
+    text: 'Kel! Lash that line and talk fast — this storm means to eat the town. What did that old sinner want with you?',
+    next: 'c_marta2' },
+  c_marta2: { speaker: 'Kel', portrait: 'kel',
+    text: 'The Marigold. He says someone\'s sailing tonight to rob her bones. What was she carrying, Marta?',
+    next: 'c_marta3' },
+  c_marta3: { speaker: 'Marta', portrait: 'marta',
+    text: 'My grandmother\'s story: the Marigold carried Elias Fane home — the FIRST keeper, Alvar\'s great-grandfather — with the tower\'s founding deed and every letter he ever wrote at sea. She sank in sight of his own unfinished light. He kept it burning forty years anyway.',
+    next: 'c_marta4' },
+  c_marta4: { speaker: 'Marta', portrait: 'marta',
+    text: 'If some quill-stamped vulture thinks he\'s taking Fane\'s chest from this family, on THIS night... then keep that light burning, Kel. Keepers\' blood. Go.',
+    effect: g => { g.setFlag('c_martaTold'); g.addClue('c_marigold'); },
+    next: null },
+  c_marta_again: { speaker: 'Marta', portrait: 'marta',
+    text: 'The boats will hold. Will the light? Go where you\'re needed, love.',
+    next: null },
+
+  c_alvar1: { speaker: 'Alvar', portrait: 'alvar',
+    text: 'Kel! The relay\'s dead — I saw the beam come back full. That was you? Of course it was you. Now grab a handle: this wind is shaking the clockwork and the storm reserve wants winding.',
+    next: 'c_alvar2' },
+  c_alvar2: { speaker: 'Kel', portrait: 'kel',
+    text: 'Voss talked. It\'s the Marigold, Uncle. The Collector is coming for Elias Fane\'s chest — tonight.',
+    next: 'c_alvar3' },
+  c_alvar3: { speaker: 'Alvar', portrait: 'alvar',
+    text: '...Great-grandfather\'s chest. Nine years I\'ve tended his light and never knew she kept it. Then hear me, Kel: NOBODY dies over it. Not even grave-robbers. We give them what Fane gave everyone: light to see the rocks by — and a bell to answer for them. WIND.',
+    effect: g => g.setFlag('c_alvarBriefed'),
+    next: null },
+  c_alvar_again: { speaker: 'Alvar', portrait: 'alvar',
+    text: 'The reserve, Kel — catch the flywheel at the top of its swing, three clean catches. My hands aren\'t fast enough tonight. Yours are.',
+    next: null },
+
+  /* finale: the 'intro' cutscene (see Chapters.ch3.cutscenes) narrates the
+     light and bell overwhelming the schooner, then opens this choice */
+  c_fin_choice: { speaker: 'Kel', portrait: 'kel',
+    text: 'The schooner claws for open water, the harbor arms closing around her like a hand.',
+    choices: [
+      { label: '"Let the light finish it."', next: 'c_fin6' },
+      { label: '"Ring the bell once more — for Fane."', next: 'c_fin6b' },
+    ] },
+  c_fin6: { speaker: '', portrait: 'narrator',
+    text: 'You say nothing. The beam says it for you, sweeping the schooner\'s deck bare of shadow to hide in. She strikes her sails and turns for the harbor mouth — surrender, not choice.',
+    next: 'c_fin7' },
+  c_fin6b: { speaker: '', portrait: 'narrator',
+    text: 'Far off, the fog bell — no fog tonight, just storm — tolls once more anyway, deep and slow, like a name being read aloud. The schooner strikes her sails and turns for the harbor mouth, as if the sound itself had turned her.',
+    next: 'c_fin7' },
+  c_fin7: { speaker: 'Alvar', portrait: 'alvar',
+    text: 'She\'s turning, Kel. Look — she\'s actually turning. Great tides... we did it. Nobody drowned tonight. Not even a grave-robber.',
+    effect: g => g.cutscene('outro'),
+    next: null },
 };
 
 /* ---------------- Ending epilogues ---------------- */
+const EndingText3 = [
+  'Elias Fane\'s sea-chest came up the hundred and eighteen steps at last, four generations late. Inside: the tower\'s founding deed, a captain\'s letters, and a keeper\'s log that began "Light kept, whatever the cost."',
+  'The Collector gave his real name to no one, but he gave his ledger to the constable — enough names and dates to keep three harbors\' courts busy through the spring.',
+  'Voss served his sentence a changed man, or at least a quieter one. He mends nets now, by the boat shed, and swears — to anyone who\'ll listen — that he never once drowned a soul. Nobody argues with him about it anymore.',
+  'Grey Harbor got its light, its bell, its keeper, and its story back, all in one storm. Kel stayed for good this time. Some lights are worth minding for the rest of your life.',
+];
+
 const EndingText2 = [
   'The ferry tied up twenty minutes past midnight, and Marta stepped off it arguing with the gangplank. She had brought back city tea, city gossip, and absolutely no patience for either.',
   'The magpie kept the button, the ring-pulls, and the thimble. Alvar kept his recovered pipe-band, and told everyone at the harbor inn that his apprentice "rows nearly as well as a keeper should."',
@@ -234,6 +350,28 @@ const Prologue2 = [
     text: 'Somewhere out in that white, the midnight ferry was feeling her way home. Marta was aboard.' },
   { art: () => Art.prologue2(3),
     text: 'Ships trust the fog bell of Bell Rock when they can trust nothing else. Tonight, for the first time in eighty years... the bell was silent.' },
+];
+
+const Prologue3 = [
+  { art: () => Art.prologue3(1),
+    text: 'By spring, the almanacs agreed on one thing: a storm was coming the old sailors would measure every future storm against.' },
+  { art: () => Art.prologue3(2),
+    text: 'And Voss — awaiting trial in the town lock-up — sent word that he would speak. But only to Kel, and only once.' },
+  { art: () => Art.prologue3(3),
+    text: 'Whatever he had to say, it began in 1893, with a ship called the Marigold, and a storm just like this one.' },
+];
+
+/* mid-chapter cutscenes for chapter three's finale */
+const FinaleIntro = [
+  { art: () => Art.finale(1),
+    text: 'The flywheel screams up to speed. Overhead, the great lens locks and BLAZES — full strength, storm be damned. Across the black water, faint under the wind: DONG. Bell Rock, awake, answering the light note for note.' },
+  { art: () => Art.finale(2),
+    text: 'Caught dead center in the beam, sails ripping: a black schooner with no business in this weather. The Collector\'s hunt for Elias Fane\'s chest ends in a hundred thousand candlepower — and the only door left open leads straight to the constable\'s launch.' },
+];
+
+const FinaleOutro = [
+  { art: () => Art.finale(3),
+    text: 'By the time the wind drops toward dawn, the Collector\'s crew are ashore in irons, his strongbox charts confiscated, and Elias Fane\'s sea-chest is finally, properly, coming home.' },
 ];
 
 /* ---------------- Scenes ---------------- */
@@ -562,6 +700,144 @@ Scenes.bellrock = {
   ],
 };
 
+/* ================= CHAPTER THREE SCENES ================= */
+
+Scenes.jail = {
+  name: 'The Lock-Up',
+  mood: 'storm',
+  art: () => Art.jail(),
+  hotspots: [
+    { id: 'c_voss', label: 'Voss', rect: [90, 580, 300, 440],
+      onTap: g => g.dialog(g.flag('c_met') ? 'c_voss_again' : 'c_voss1') },
+    { id: 'c_window2', label: 'Barred window', rect: [450, 210, 220, 180],
+      onTap: g => g.say('Storm cloud already blackening the sky. The barometer in your gut is falling faster than any glass.') },
+    { id: 'c_exit', label: 'Door out', rect: [570, 850, 180, 320],
+      onTap: g => {
+        if (!g.flag('c_met')) { g.say('Voss asked to speak with you. Hear him out first.'); return; }
+        g.goto('dockstorm');
+      } },
+  ],
+};
+
+Scenes.dockstorm = {
+  name: 'Grey Harbor Dock',
+  mood: 'storm',
+  art: f => Art.dockStorm(f),
+  hotspots: [
+    { id: 'c_marta', label: 'Marta', rect: [100, 700, 220, 300],
+      onTap: g => g.dialog(g.flag('c_martaTold') ? 'c_marta_again' : 'c_marta1') },
+    { id: 'c_ledge', label: 'Ledge above the door', rect: [516, 746, 148, 54],
+      onTap: g => {
+        if (g.flag('c_hasKey')) { g.say('Just a bare ledge now, streaming with rain.'); return; }
+        g.setFlag('c_hasKey'); g.addItem('officekey'); g.refresh();
+        g.say('Above the office door, half-hidden by the rain: a key, exactly where Voss said it would be.');
+      } },
+    { id: 'c_officedoor', label: 'Harbor office door', rect: [534, 780, 112, 150],
+      onTap: g => {
+        if (g.flag('c_officeOpen')) { g.goto('office'); return; }
+        g.say('Locked fast. Voss said the key would be nearby.');
+      },
+      onItem: { officekey: g => {
+        g.setFlag('c_officeOpen'); g.removeItem('officekey');
+        g.say('The key turns. The office door bangs open in the wind.');
+      } } },
+    { id: 'c_boat', label: 'Straining boat', rect: [230, 900, 220, 140],
+      onTap: g => g.say('A boat fights its lines like it wants to be somewhere drier. Marta\'s knots hold, for now.') },
+    { id: 'c_stormsea', label: 'The storm', rect: [0, 60, 800, 300],
+      onTap: g => g.say('The worst weather the almanacs have a name for, and it\'s only just arriving.') },
+    { id: 'c_tocliffs3', label: 'Cliff path', rect: [40, 940, 200, 200],
+      onTap: g => {
+        if (!g.flag('c_gotChart')) { g.say('No reason to go out on the cliffs yet — you don\'t even know what you\'re looking for.'); return; }
+        g.goto('cliffs3');
+      } },
+    { id: 'c_tolamp3', label: 'Path to the lighthouse', rect: [270, 1000, 200, 170],
+      onTap: g => g.goto('lamp3') },
+    { id: 'c_tojail', label: 'Back to the lock-up', rect: [530, 960, 170, 220],
+      onTap: g => g.goto('jail') },
+  ],
+};
+
+Scenes.office = {
+  name: 'Harbor Office',
+  mood: 'storm',
+  art: f => Art.office(f),
+  hotspots: [
+    { id: 'c_chart2', label: 'Wall chart', rect: [110, 210, 240, 180],
+      onTap: g => g.say('A chart of the coast, marked in Voss\'s hand with routes that avoid the black stretch entirely. Now you know why.') },
+    { id: 'c_window3', label: 'Rain window', rect: [510, 190, 180, 200],
+      onTap: g => g.say('Rain hammers the glass so hard it sounds like gravel. Somewhere out past it, the storm is only getting started.') },
+    { id: 'c_stove', label: 'Iron stove', rect: [60, 600, 220, 300],
+      onTap: g => {
+        if (g.flag('c_hasIron')) { g.say('The stove ticks and glows. You already took its iron.'); return; }
+        g.setFlag('c_hasIron'); g.addItem('fireiron'); g.refresh();
+        g.say('Beside the stove: a bent fire iron. It might pry more than embers tonight.');
+      } },
+    { id: 'c_desk', label: 'Desk', rect: [460, 770, 280, 190],
+      onTap: g => g.say('Ledgers and manifests in Voss\'s cramped hand — nothing here he hasn\'t already confessed to.') },
+    { id: 'c_floorboard', label: 'Loose floorboard', rect: [280, 990, 220, 140],
+      onTap: g => {
+        if (g.flag('c_gotChart')) { g.say('Empty now. You already took everything Voss hid under here.'); return; }
+        g.say('A floorboard, nailed flush — except the nail heads are shiny, recently pulled and reset. Something\'s underneath.');
+      },
+      onItem: { fireiron: g => {
+        if (g.flag('c_gotChart')) { g.say('Nothing left to pry.'); return; }
+        g.setFlag('c_gotChart'); g.addClue('c_chart'); g.addClue('c_letters'); g.refresh();
+        g.say('The iron bites under the board and it splits up with a crack. Inside: a hand-drawn chart and a bundle of cold, typed letters.');
+      } } },
+    { id: 'c_exit2', label: 'Door out', rect: [630, 480, 170, 330],
+      onTap: g => g.goto('dockstorm') },
+  ],
+};
+
+Scenes.cliffs3 = {
+  name: 'The Black Cliffs',
+  mood: 'storm',
+  art: f => Art.cliffs(true, false, { shutterOff: f.c_shutterOff, panelOpen: f.c_panelOpen }),
+  hotspots: [
+    { id: 'c_relay', label: 'Shore relay', rect: [220, 460, 200, 220],
+      onTap: g => {
+        if (g.flag('c_shutterOff')) { g.say('The shutter housing hangs open, harmless. The beam runs full and free.'); return; }
+        if (!g.flag('c_gotChart')) { g.say('A locked steel box bolted to the rock, humming faintly. No idea what opens it — Voss\'s chart might know.'); return; }
+        if (!g.flag('c_panelOpen')) { g.say('The access panel is screwed down tight. You\'d need something to pry it with.'); return; }
+        g.puzzle('relaylock');
+      },
+      onItem: { fireiron: g => {
+        if (g.flag('c_shutterOff') || g.flag('c_panelOpen')) { g.say('Nothing left to pry here.'); return; }
+        if (!g.flag('c_gotChart')) { g.say('You could pry at it, but you don\'t even know what you\'re looking for yet.'); return; }
+        g.setFlag('c_panelOpen'); g.refresh();
+        g.say('The fire iron levers the access panel loose. Inside: a small numbered keypad, waiting for a date.');
+      } } },
+    { id: 'c_stormsea2', label: 'The black water', rect: [420, 700, 340, 220],
+      onTap: g => g.say('The sea itself seems to be trying to climb these cliffs tonight.') },
+    { id: 'c_backdock', label: 'Path back to the dock', rect: [0, 380, 200, 700],
+      onTap: g => g.goto('dockstorm') },
+  ],
+};
+
+Scenes.lamp3 = {
+  name: 'The Lamp Room',
+  mood: 'storm',
+  art: () => Art.lamp('storm'),
+  hotspots: [
+    { id: 'c_alvar_npc', label: 'Alvar', rect: [560, 470, 180, 290],
+      onTap: g => {
+        if (g.flag('c_alvarBriefed')) { g.dialog('c_alvar_again'); return; }
+        if (!g.flag('c_shutterOff')) { g.say('"Kel! Cut that relay first — the beam still gutters. GO!"'); return; }
+        g.dialog('c_alvar1');
+      } },
+    { id: 'c_reserve', label: 'Storm reserve flywheel', rect: [150, 780, 200, 220],
+      onTap: g => {
+        if (g.flag('c_wound')) { g.say('The reserve holds steady, charged and humming under the strain.'); return; }
+        if (!g.flag('c_alvarBriefed')) { g.say('Best hear Alvar out before you touch his machinery.'); return; }
+        g.puzzle('reserve');
+      } },
+    { id: 'c_lens3', label: 'The great lens', rect: [270, 340, 260, 430],
+      onTap: g => g.say('The lens burns and gutters with every gust — but it\'s still throwing every ounce of light it has at the black water.') },
+    { id: 'c_stairs3', label: 'Stairs down', rect: [255, 990, 290, 170],
+      onTap: g => g.goto('dockstorm') },
+  ],
+};
+
 /* ---------------- Chapters ---------------- */
 const Chapters = {
   ch1: {
@@ -583,6 +859,21 @@ const Chapters = {
     prologue: Prologue2,
     objective: objective2,
     ending: { title: 'The Bell Answers', text: EndingText2, art: () => Art.ending2() },
+  },
+  ch3: {
+    label: 'Chapter Three',
+    name: 'The Wreck of the Marigold',
+    saveKey: 'greyharbor_save_ch3_v1',
+    start: 'jail',
+    requires: 'ch2',
+    lockHint: 'Finish Chapter Two to unlock',
+    prologue: Prologue3,
+    objective: objective3,
+    ending: { title: 'The Light Endures Still', text: EndingText3, art: () => Art.ending3() },
+    cutscenes: {
+      intro: { slides: FinaleIntro, next: { type: 'dialog', id: 'c_fin_choice' } },
+      outro: { slides: FinaleOutro, next: { type: 'end' } },
+    },
   },
 };
 
@@ -608,6 +899,30 @@ const Puzzles = {
       g.setFlag('b_bellRung');
       g.refresh();
       setTimeout(() => g.dialog('b_end1'), 600);
+    },
+  },
+  relaylock: {
+    type: 'keypad',
+    title: 'The Collector\'s Relay',
+    sub: '"Shutter lock is the year she sank." — Voss\'s chart',
+    code: '1893',
+    wrongText: 'The shutter stays locked down tight.',
+    onSolve: g => {
+      g.setFlag('c_shutterOff');
+      g.addClue('c_relay');
+      g.refresh();
+      g.say('1-8-9-3. The shutter housing pops loose and swings free. The beam leaps back to full strength, sweeping the black water clean.');
+    },
+  },
+  reserve: {
+    type: 'reserve',
+    title: 'Wind the Storm Reserve',
+    sub: 'Catch the flywheel handle when the marker crosses the gold notch at the top. Three clean catches will charge the reserve.',
+    pulls: 3,
+    onSolve: g => {
+      g.setFlag('c_wound');
+      g.refresh();
+      setTimeout(() => g.cutscene('intro'), 500);
     },
   },
   drawer: {

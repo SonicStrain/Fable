@@ -46,6 +46,29 @@ const Art = (() => {
     </g>`;
   }
 
+  /* driving rain + lightning flashes (chapter three weather) */
+  function storming(prefix, opts = {}) {
+    let drops = '';
+    let x = (opts.seed || 7) * 131;
+    const rnd = () => { x = (x * 16807) % 2147483647; return x / 2147483647; };
+    for (let band = 0; band < 2; band++) {
+      let lines = '';
+      for (let i = 0; i < 16; i++) {
+        const lx = rnd() * 860 - 30, ly = rnd() * 1200 - 600, len = 60 + rnd() * 60;
+        lines += `<line x1="${lx.toFixed(0)}" y1="${ly.toFixed(0)}" x2="${(lx - 18).toFixed(0)}" y2="${(ly + len).toFixed(0)}"/>`;
+      }
+      drops += `<g stroke="#9fb2cc" stroke-width="${band ? 2 : 3}" opacity="${band ? .28 : .4}" stroke-linecap="round">
+        ${lines}
+        <animateTransform attributeName="transform" type="translate" values="0,-600;60,600" dur="${band ? '1.05s' : '.75s'}" repeatCount="indefinite" additive="sum"/>
+      </g>`;
+    }
+    const flash = opts.noFlash ? '' : `
+      <rect width="800" height="1200" fill="#dfe8ff" opacity="0" pointer-events="none">
+        <animate attributeName="opacity" values="0;0;0;.5;.08;.65;0;0;0;0" keyTimes="0;.3;.62;.64;.66;.68;.72;.8;.9;1" dur="${opts.flashDur || '8.5s'}" repeatCount="indefinite"/>
+      </rect>`;
+    return `<g pointer-events="none">${drops}${flash}</g>`;
+  }
+
   /* small helper: person silhouette (standing) */
   function figure(x, y, h, color, opts = {}) {
     const s = h / 100;
@@ -454,8 +477,11 @@ const Art = (() => {
     return wrap(defs, body);
   }
 
-  /* ------------------------------------------------ LAMP ROOM (fogNight: chapter two) */
-  function lamp(fogNight) {
+  /* ------------------------------------------------ LAMP ROOM
+     mode: falsy = ch1 night, 'fog' = ch2, 'storm' = ch3 */
+  function lamp(mode) {
+    const fogNight = mode === 'fog' || mode === true;
+    const storm = mode === 'storm';
     const defs = `
       <linearGradient id="lp-nightsea" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#0a1024"/><stop offset="62%" stop-color="#18234a"/><stop offset="66%" stop-color="#0c1530"/><stop offset="100%" stop-color="#060b1a"/>
@@ -471,7 +497,13 @@ const Art = (() => {
         <stop offset="0%" stop-color="#3d3222"/><stop offset="100%" stop-color="#1c150c"/>
       </linearGradient>`;
 
-    const windows = fogNight ? `
+    const windows = storm ? `
+      <rect width="800" height="820" fill="#10141f"/>
+      <g opacity=".5" stroke="#3d5578" stroke-width="3" fill="none">
+        <path d="M40,600 q60,-26 120,0 t120,0 t120,0 t120,0 t120,0"><animate attributeName="opacity" values=".5;.15;.5" dur="2.6s" repeatCount="indefinite"/></path>
+        <path d="M0,680 q70,-32 140,0 t140,0 t140,0 t140,0 t140,0"><animate attributeName="opacity" values=".2;.55;.2" dur="2.1s" repeatCount="indefinite"/></path>
+      </g>
+      ${storming('lps', { flashDur: '7s' })}` : fogNight ? `
       <rect width="800" height="820" fill="#3d4656"/>
       <rect width="800" height="820" fill="#2c3442" opacity=".6"/>
       ${fogBands('lpf', .8)}
@@ -487,11 +519,12 @@ const Art = (() => {
         <path d="M480,600 q44,-7 90,0 t80,0"><animate attributeName="opacity" values=".15;.5;.15" dur="6s" repeatCount="indefinite"/></path>
       </g>`;
 
-    const alvar = fogNight ? `
+    const alvar = (fogNight || storm) ? `
       <g transform="translate(645,690)">
         ${figure(0, -160, 210, '#26314a', { cap: '#1a2338', extra: `
           <path d="M-9,30 L-26,20" stroke="#26314a" stroke-width="6" fill="none"/>` })}
       </g>` : '';
+    const lensFlicker = storm ? '<animate attributeName="opacity" values=".9;.4;.85;.3;.9" dur="1.3s" repeatCount="indefinite"/>' : '<animate attributeName="opacity" values=".9;.55;.9" dur="4s" repeatCount="indefinite"/>';
 
     const body = `
       <!-- panoramic windows -->
@@ -511,7 +544,7 @@ const Art = (() => {
       <!-- the great lens -->
       <g transform="translate(400,560)">
         <circle cx="0" cy="30" r="230" fill="url(#lp-glow)" opacity=".9">
-          <animate attributeName="opacity" values=".9;.55;.9" dur="4s" repeatCount="indefinite"/>
+          ${lensFlicker}
         </circle>
         <path d="M-90,300 L90,300 L70,236 L-70,236 Z" fill="#33291a"/>
         <path d="M-100,300 L100,300 L100,318 L-100,318 Z" fill="#241d12"/>
@@ -559,7 +592,7 @@ const Art = (() => {
   }
 
   /* ------------------------------------------------ CLIFFS */
-  function cliffs(beamOn, gateOpen) {
+  function cliffs(beamOn, gateOpen, storm) {
     const defs = `
       <linearGradient id="cl-sky" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#070c1e"/><stop offset="100%" stop-color="#1a2a52"/>
@@ -601,25 +634,27 @@ const Art = (() => {
       <!-- cliff mass right -->
       <path d="M330,1200 L360,940 Q330,760 430,600 Q470,520 470,430 L560,300 L800,240 L800,1200 Z" fill="url(#cl-rock)"/>
       <path d="M470,430 Q520,470 540,560 M430,600 Q490,640 500,730" stroke="#0c0e16" stroke-width="7" fill="none" opacity=".7"/>
-      <!-- cave mouth + winch gate -->
+      <!-- cave mouth + winch gate. In chapter three (storm) this is old
+           history now: Voss's gate stands open and unused, weather-worn,
+           with no working crank left to fuss over. -->
       <g transform="translate(590,760)">
         <path d="M-120,220 Q-140,40 -40,-60 Q40,-130 130,-90 L150,220 Z" fill="#05070d"/>
         <path d="M-120,220 Q-140,40 -40,-60 Q40,-130 130,-90" fill="none" stroke="#3d4356" stroke-width="10"/>
-        <!-- gate (squashes upward when winched open) -->
-        <g id="cl-gate" ${gateOpen ? 'transform="translate(0,-118) scale(1,.3)"' : ''}>
+        <!-- gate (squashes upward when winched open; chapter three shows it long-since left open) -->
+        <g id="cl-gate" ${(gateOpen || storm) ? 'transform="translate(0,-118) scale(1,.3)"' : ''} opacity="${storm ? '.6' : '1'}">
           <path d="M-96,200 L-100,-20 M-52,214 L-58,-72 M-6,220 L-8,-102 M42,222 L40,-112 M92,220 L92,-100" stroke="#3b2c17" stroke-width="20"/>
           <path d="M-106,-8 L104,-56 M-108,80 L108,60 M-106,160 L110,150" stroke="#4a3a20" stroke-width="16"/>
           <circle cx="-30" cy="66" r="10" fill="#1c150c"/>
         </g>
-        ${gateOpen ? '<radialGradient id="cl-cavelight" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffb54d" stop-opacity=".35"/><stop offset="100%" stop-color="#ffb54d" stop-opacity="0"/></radialGradient><ellipse cx="0" cy="120" rx="110" ry="90" fill="url(#cl-cavelight)"><animate attributeName="opacity" values="1;.6;1" dur="2.6s" repeatCount="indefinite"/></ellipse>' : ''}
-        <!-- winch -->
-        <g transform="translate(112,64)">
+        ${(gateOpen || storm) ? '<radialGradient id="cl-cavelight" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffb54d" stop-opacity=".2"/><stop offset="100%" stop-color="#ffb54d" stop-opacity="0"/></radialGradient><ellipse cx="0" cy="120" rx="110" ry="90" fill="url(#cl-cavelight)" opacity=".5"/>' : ''}
+        <!-- winch: rusted quiet now in chapter three, no crank fitted -->
+        <g transform="translate(112,64)" opacity="${storm ? '.55' : '1'}">
           <rect x="-14" y="-10" width="46" height="120" rx="8" fill="#241d12"/>
           <circle cx="8" cy="22" r="30" fill="#3b2c17" stroke="#191108" stroke-width="5"/>
           <circle cx="8" cy="22" r="9" fill="#0d0a06"/>
           <path d="M8,-6 L8,50 M-20,22 L36,22" stroke="#191108" stroke-width="6"/>
           <path d="M-14,26 Q-60,40 -96,34" stroke="#1c150c" stroke-width="6" fill="none"/>
-          ${gateOpen ? `
+          ${(gateOpen && !storm) ? `
           <g id="cl-crank" transform="translate(8,22) rotate(-40)">
             <rect x="-4" y="-34" width="8" height="38" rx="4" fill="#7a6248"/>
             <rect x="-4" y="-42" width="26" height="9" rx="4" fill="#5a4632"/>
@@ -647,6 +682,259 @@ const Art = (() => {
       <g fill="#cfe0f5" opacity=".5">
         <ellipse cx="380" cy="1176" rx="60" ry="10"><animate attributeName="opacity" values=".5;.1;.5" dur="3.4s" repeatCount="indefinite"/></ellipse>
         <ellipse cx="120" cy="710" rx="70" ry="9"><animate attributeName="opacity" values=".2;.55;.2" dur="4.2s" repeatCount="indefinite"/></ellipse>
+      </g>
+      ${storm ? `
+      <rect width="800" height="1200" fill="#0a0e18" opacity=".45" pointer-events="none"/>
+      <g opacity=".7" stroke="#7a95bd" stroke-width="4" fill="none">
+        <path d="M60,730 q60,-30 120,0 t120,0 t120,0"><animate attributeName="opacity" values=".7;.25;.7" dur="2.2s" repeatCount="indefinite"/></path>
+        <path d="M300,820 q70,-36 140,0 t140,0"><animate attributeName="opacity" values=".3;.7;.3" dur="1.9s" repeatCount="indefinite"/></path>
+      </g>
+      <!-- Voss's shore relay: the shutter rig that blinds the light -->
+      <g transform="translate(300,560)">
+        <path d="M-40,120 L0,10 L40,120" stroke="#241d12" stroke-width="12" fill="none"/>
+        <g id="cl-relaybox">
+          <rect x="-46" y="-58" width="92" height="72" rx="8" fill="#2c2e3a" stroke="#14161f" stroke-width="5"/>
+          ${storm.shutterOff
+            ? `<circle cx="0" cy="-22" r="24" fill="#ffe9a8"><animate attributeName="opacity" values="1;.75;1" dur="1.4s" repeatCount="indefinite"/></circle>`
+            : `<g id="cl-shutter"><circle cx="0" cy="-22" r="24" fill="#0d0f16"/><path d="M-24,-22 H24 M-21,-34 H21 M-21,-10 H21" stroke="#3d4152" stroke-width="5"/></g>`}
+          ${storm.panelOpen
+            ? `<rect x="18" y="-4" width="26" height="16" rx="3" fill="#0d0f16" stroke="#c9a24a" stroke-width="2"/>`
+            : `<rect id="cl-relaylock" x="18" y="-4" width="26" height="16" rx="3" fill="#4a3a20" stroke="#14161f" stroke-width="3"/>`}
+        </g>
+        <path d="M-46,-30 Q-130,-60 -180,-140" stroke="#14161f" stroke-width="5" fill="none"/>
+      </g>
+      ${storming('cls', { seed: 21 })}` : ''}`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ THE LOCK-UP (ch3) */
+  function jail() {
+    const defs = `
+      <linearGradient id="jl-wall" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#23222b"/><stop offset="100%" stop-color="#33313d"/>
+      </linearGradient>
+      ${lanternGlow(0, 0, 0, 'jl-glow')}`;
+    const body = `
+      <rect width="800" height="1200" fill="url(#jl-wall)"/>
+      <g stroke="#191821" stroke-width="3" opacity=".7">
+        <path d="M0,160 H800 M0,330 H800 M0,500 H800 M0,670 H800 M0,840 H800"/>
+        <path d="M200,160 V330 M480,160 V330 M340,330 V500 M620,330 V500 M200,500 V670 M480,500 V670"/>
+      </g>
+      <!-- barred window: the storm outside -->
+      <g transform="translate(560,300)">
+        <rect x="-110" y="-90" width="220" height="180" rx="8" fill="#05070d"/>
+        <rect x="-98" y="-78" width="196" height="156" fill="#0d1322"/>
+        <g opacity=".6" stroke="#3d5578" stroke-width="3" fill="none">
+          <path d="M-90,40 q30,-16 60,0 t60,0 t60,0"><animate attributeName="opacity" values=".6;.2;.6" dur="2.2s" repeatCount="indefinite"/></path>
+        </g>
+        <g stroke="#9fb2cc" stroke-width="2" opacity=".5" stroke-linecap="round">
+          <line x1="-60" y1="-70" x2="-70" y2="-10"/><line x1="0" y1="-78" x2="-10" y2="-16"/><line x1="60" y1="-60" x2="50" y2="0"/>
+          <animateTransform attributeName="transform" type="translate" values="0,-90;30,90" dur=".8s" repeatCount="indefinite" additive="sum"/>
+        </g>
+        <rect x="-98" y="-78" width="196" height="156" fill="#dfe8ff" opacity="0">
+          <animate attributeName="opacity" values="0;0;.6;.1;.7;0;0" keyTimes="0;.6;.63;.66;.68;.73;1" dur="9s" repeatCount="indefinite"/>
+        </rect>
+        <g stroke="#191821" stroke-width="12"><path d="M-58,-90 V90 M0,-90 V90 M58,-90 V90 M-110,0 H110"/></g>
+      </g>
+      <!-- bars separating the cell -->
+      <g stroke="#14131c" stroke-width="16">
+        <path d="M80,340 V1200 M180,340 V1200 M280,340 V1200 M380,340 V1200"/>
+        <path d="M40,420 H420 M40,1080 H420"/>
+      </g>
+      <!-- Voss on the bunk, behind bars -->
+      <g transform="translate(215,760)">
+        <path d="M-120,220 L160,220 L160,150 L-120,150 Z" fill="#2a2027"/>
+        <path d="M-110,150 L-110,240 M150,150 L150,240" stroke="#191218" stroke-width="12"/>
+        <g transform="translate(20,-30)">
+          <ellipse cx="0" cy="182" rx="80" ry="20" fill="#0d0c12"/>
+          <path d="M-56,180 Q-60,80 -6,64 Q52,50 64,110 L70,180 Z" fill="#241d30"/>
+          <circle cx="-6" cy="34" r="34" fill="#d0a98e"/>
+          <path d="M-40,22 Q-36,-8 -6,-8 Q26,-8 30,22 L32,30 L-42,30 Z" fill="#1d1826"/>
+          <path d="M-42,30 L32,30 L30,38 L-40,38 Z" fill="#0f0c16"/>
+          <path d="M-20,52 L10,52" stroke="#96684a" stroke-width="3"/>
+          <path d="M-14,64 Q-30,96 -26,150" stroke="#241d30" stroke-width="22" fill="none" stroke-linecap="round"/>
+        </g>
+      </g>
+      <!-- lantern -->
+      <g transform="translate(640,700)">
+        <circle cx="0" cy="10" r="130" fill="url(#jl-glow)"/>
+        <path d="M0,-52 L0,-24" stroke="#241c12" stroke-width="5"/>
+        <rect x="-14" y="-24" width="28" height="38" rx="6" fill="#1a140b" stroke="#0d0a06" stroke-width="3"/>
+        <rect x="-8" y="-17" width="16" height="24" fill="#ffd98a"><animate attributeName="opacity" values="1;.7;1" dur="2.2s" repeatCount="indefinite"/></rect>
+      </g>
+      <!-- heavy door out -->
+      <g transform="translate(660,1010)">
+        <rect x="-90" y="-160" width="180" height="320" rx="8" fill="#31261c"/>
+        <rect x="-74" y="-144" width="148" height="304" fill="#4a3524"/>
+        <path d="M-74,-40 H74 M-74,60 H74" stroke="#241a10" stroke-width="6"/>
+        <circle cx="-46" cy="10" r="8" fill="#8a8a94"/>
+      </g>`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ STORM DOCK (ch3) */
+  function dockStorm(f = {}) {
+    const defs = `
+      <linearGradient id="ds-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0a0d18"/><stop offset="100%" stop-color="#232a3d"/>
+      </linearGradient>
+      <linearGradient id="ds-sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2c3752"/><stop offset="100%" stop-color="#0d1220"/>
+      </linearGradient>
+      ${lanternGlow(0, 0, 0, 'ds-glow')}`;
+    const body = `
+      <rect width="800" height="740" fill="url(#ds-sky)"/>
+      <!-- boiling cloud bank -->
+      <g fill="#141926">
+        <ellipse cx="200" cy="120" rx="360" ry="90"><animateTransform attributeName="transform" type="translate" values="-60,0;60,0;-60,0" dur="13s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="620" cy="200" rx="380" ry="100"><animateTransform attributeName="transform" type="translate" values="50,0;-70,0;50,0" dur="17s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="400" cy="60" rx="420" ry="80"><animateTransform attributeName="transform" type="translate" values="-40,0;40,0;-40,0" dur="11s" repeatCount="indefinite"/></ellipse>
+      </g>
+      <rect y="740" width="800" height="460" fill="url(#ds-sea)"/>
+      <!-- heaving swells -->
+      <g stroke="#5a76a8" stroke-width="5" fill="none">
+        <path d="M-40,800 q80,-44 160,0 t160,0 t160,0 t160,0 t160,0" opacity=".7">
+          <animateTransform attributeName="transform" type="translate" values="0,0;-80,14;0,0" dur="3.2s" repeatCount="indefinite"/>
+        </path>
+        <path d="M-80,890 q90,-52 180,0 t180,0 t180,0 t180,0" opacity=".5">
+          <animateTransform attributeName="transform" type="translate" values="0,0;70,10;0,0" dur="2.6s" repeatCount="indefinite"/>
+        </path>
+      </g>
+      <g fill="#cfe0f5" opacity=".6">
+        <ellipse cx="180" cy="806" rx="70" ry="9"><animate attributeName="opacity" values=".6;.15;.6" dur="1.8s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="560" cy="890" rx="90" ry="11"><animate attributeName="opacity" values=".2;.65;.2" dur="2.3s" repeatCount="indefinite"/></ellipse>
+      </g>
+      <!-- pier -->
+      <path d="M0,930 L800,895 L800,1200 L0,1200 Z" fill="#241a10"/>
+      <g stroke="#120c06" stroke-width="4" opacity=".7"><path d="M0,1010 L800,975 M0,1100 L800,1068"/></g>
+      <!-- harbor office -->
+      <g transform="translate(590,700)">
+        <path d="M-150,230 L150,230 L150,40 L-150,40 Z" fill="#3a332c"/>
+        <path d="M-170,46 L0,-64 L170,46 Z" fill="#262019"/>
+        <rect x="-56" y="80" width="112" height="150" rx="4" fill="#241a10"/>
+        <rect x="-46" y="90" width="92" height="140" fill="#3d2c1d"/>
+        <circle cx="26" cy="164" r="7" fill="#8a8a94"/>
+        <rect id="ds-ledge" x="-64" y="66" width="128" height="12" rx="3" fill="#191108"/>
+        <rect x="76" y="96" width="60" height="66" rx="4" fill="#141720"/>
+        <rect x="82" y="102" width="48" height="54" fill="#3d3524"/>
+        <path d="M106,102 V156 M82,129 H130" stroke="#141720" stroke-width="4"/>
+        <g stroke="#191108" stroke-width="5"><path d="M82,106 L130,152 M130,106 L82,152"/></g>
+        <text x="0" y="24" font-size="19" fill="#c9b98e" text-anchor="middle" font-family="Georgia" font-style="italic">HARBOR OFFICE</text>
+        <g transform="translate(-110,80)">
+          <circle cx="0" cy="8" r="70" fill="url(#ds-glow)" opacity=".8"/>
+          <rect x="-9" y="-8" width="18" height="26" rx="4" fill="#1a140b" stroke="#0d0a06" stroke-width="2"/>
+          <rect x="-5" y="-3" width="10" height="16" fill="#ffd98a"><animate attributeName="opacity" values="1;.5;1" dur=".9s" repeatCount="indefinite"/></rect>
+        </g>
+      </g>
+      <!-- Marta lashing the boats -->
+      <g transform="translate(200,860)">
+        ${figure(0, -110, 190, '#2c3a2e', { hood: '#3d5040', extra: `
+          <path d="M11,44 Q40,52 58,44" stroke="#8a7a5c" stroke-width="4" fill="none">
+            <animateTransform attributeName="transform" type="rotate" values="-6 11 44;6 11 44;-6 11 44" dur="1.6s" repeatCount="indefinite"/>
+          </path>` })}
+        <path d="M60,66 Q140,40 190,72" stroke="#8a7a5c" stroke-width="4" fill="none"/>
+      </g>
+      <!-- straining boat -->
+      <g transform="translate(330,955)">
+        <animateTransform attributeName="transform" type="translate" values="330,955;330,942;334,958;330,955" dur="2.4s" repeatCount="indefinite"/>
+        <path d="M-80,0 Q0,28 84,-4 L66,26 Q0,44 -60,26 Z" fill="#2c2033"/>
+      </g>
+      <!-- boarded dock lamp -->
+      <g transform="translate(90,700)">
+        <rect x="-5" y="0" width="10" height="240" fill="#0d0a12"/>
+        <path d="M-20,0 L20,0 L13,-36 L-13,-36 Z" fill="#0d0a12"/>
+        <path d="M-16,-30 L16,-8 M16,-30 L-16,-8" stroke="#241c12" stroke-width="6"/>
+      </g>
+      ${storming('ds', { seed: 12 })}`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ VOSS'S OFFICE (ch3) */
+  function office(f = {}) {
+    const defs = `
+      <linearGradient id="of-wall" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2e2820"/><stop offset="100%" stop-color="#443a2e"/>
+      </linearGradient>
+      <radialGradient id="of-stove" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ff9b3d" stop-opacity=".5"/><stop offset="100%" stop-color="#ff9b3d" stop-opacity="0"/>
+      </radialGradient>`;
+    const body = `
+      <rect width="800" height="900" fill="url(#of-wall)"/>
+      <path d="M0,900 L800,900 L800,1200 L0,1200 Z" fill="#33261a"/>
+      <g stroke="#1c1208" stroke-width="3" opacity=".6">
+        <path d="M0,980 H800 M0,1070 H800 M0,1160 H800 M240,900 V1200 M540,900 V1200"/>
+      </g>
+      <!-- wall charts -->
+      <g transform="translate(230,300)">
+        <rect x="-120" y="-90" width="240" height="180" fill="#d8cfb8" transform="rotate(-2)"/>
+        <g transform="rotate(-2)" stroke="#8a7a5c" stroke-width="2" fill="none">
+          <path d="M-100,-40 Q-40,-70 30,-30 Q80,0 100,50"/>
+          <path d="M-90,30 Q0,10 90,40"/>
+          <circle cx="40" cy="-10" r="14"/>
+          <path d="M34,-16 L46,-4 M46,-16 L34,-4" stroke="#a8434f" stroke-width="3"/>
+        </g>
+        <rect x="-120" y="-90" width="240" height="180" fill="none" stroke="#4a3a20" stroke-width="5" transform="rotate(-2)"/>
+      </g>
+      <!-- rain window -->
+      <g transform="translate(600,290)">
+        <rect x="-85" y="-95" width="170" height="190" rx="6" fill="#141410"/>
+        <rect x="-73" y="-83" width="146" height="166" fill="#0d1322"/>
+        <g stroke="#9fb2cc" stroke-width="2" opacity=".5" stroke-linecap="round">
+          <line x1="-50" y1="-70" x2="-58" y2="-20"/><line x1="10" y1="-80" x2="2" y2="-26"/><line x1="52" y1="-56" x2="44" y2="-4"/>
+          <animateTransform attributeName="transform" type="translate" values="0,-80;24,80" dur=".7s" repeatCount="indefinite" additive="sum"/>
+        </g>
+        <rect x="-73" y="-83" width="146" height="166" fill="#dfe8ff" opacity="0">
+          <animate attributeName="opacity" values="0;0;.55;.08;.6;0;0" keyTimes="0;.55;.58;.6;.62;.68;1" dur="10s" repeatCount="indefinite"/>
+        </rect>
+        <path d="M0,-83 V83 M-73,0 H73" stroke="#141410" stroke-width="7"/>
+      </g>
+      <!-- iron stove -->
+      <g transform="translate(150,760)">
+        <circle cx="0" cy="-10" r="120" fill="url(#of-stove)">
+          <animate attributeName="opacity" values="1;.6;1" dur="2.6s" repeatCount="indefinite"/>
+        </circle>
+        <rect x="-70" y="-90" width="140" height="150" rx="16" fill="#26262c"/>
+        <rect x="-40" y="-50" width="80" height="56" rx="8" fill="#0d0906"/>
+        <path d="M-26,-16 Q-20,-42 0,-46 Q20,-40 26,-16 Z" fill="#ff8c2e">
+          <animate attributeName="opacity" values="1;.6;1" dur="1.4s" repeatCount="indefinite"/>
+        </path>
+        <rect x="-16" y="-150" width="32" height="60" fill="#26262c"/>
+        <path d="M-62,60 L-70,110 M62,60 L70,110" stroke="#191921" stroke-width="10"/>
+        ${f.c_hasIron ? '' : `
+        <g id="of-fireiron" transform="translate(104,30) rotate(14)">
+          <rect x="-4" y="-70" width="8" height="120" rx="4" fill="#4a4a55"/>
+          <path d="M-4,50 Q-16,58 -12,68 L0,62 Z" fill="#4a4a55"/>
+          <circle cx="0" cy="-70" r="7" fill="none" stroke="#4a4a55" stroke-width="5"/>
+        </g>`}
+      </g>
+      <!-- desk with manifests -->
+      <g transform="translate(600,830)">
+        <path d="M-130,-50 L130,-50 L120,120 L-120,120 Z" fill="#3a2410"/>
+        <path d="M-136,-56 L136,-56 L136,-38 L-136,-38 Z" fill="#4a3018"/>
+        <g transform="translate(-30,-70) rotate(-4)"><rect x="-40" y="-8" width="80" height="22" rx="2" fill="#d8cfb8"/><path d="M-30,-2 h58 M-30,4 h48" stroke="#8a7a5c" stroke-width="2"/></g>
+        <g transform="translate(50,-66) rotate(3)"><rect x="-36" y="-6" width="72" height="20" rx="2" fill="#c9bfa4"/><path d="M-26,0 h50 M-26,6 h40" stroke="#8a7a5c" stroke-width="2"/></g>
+      </g>
+      <!-- the loose floorboard -->
+      <g transform="translate(390,1080)">
+        ${f.c_gotChart ? `
+        <g id="of-board-open">
+          <rect x="-90" y="-26" width="180" height="52" rx="4" fill="#120c04"/>
+          <g transform="translate(-10,-64) rotate(-8)">
+            <rect x="-86" y="-20" width="172" height="40" rx="4" fill="#4a3826" stroke="#1c1208" stroke-width="3"/>
+          </g>
+        </g>` : `
+        <g id="of-board">
+          <rect x="-90" y="-26" width="180" height="52" rx="4" fill="#4a3826" stroke="#1c1208" stroke-width="3"/>
+          <circle cx="-72" cy="0" r="3.5" fill="#1c1208"/><circle cx="72" cy="0" r="3.5" fill="#1c1208"/>
+          <path d="M46,-26 L58,-14" stroke="#1c1208" stroke-width="3"/>
+        </g>`}
+      </g>
+      <!-- door out -->
+      <g transform="translate(710,640)">
+        <rect x="-60" y="-140" width="120" height="290" rx="6" fill="#1c1208"/>
+        <rect x="-50" y="-130" width="100" height="270" fill="#33261a"/>
+        <path d="M-50,-30 H50 M-50,80 H50" stroke="#1c1208" stroke-width="6"/>
+        <circle cx="-32" cy="0" r="6" fill="#8a8a94"/>
       </g>`;
     return wrap(defs, body);
   }
@@ -1073,6 +1361,316 @@ const Art = (() => {
     return wrap(defs, body);
   }
 
+  /* ------------------------------------------------ PROLOGUE CH3 */
+  function prologue3(n) {
+    if (n === 1) {
+      /* the storm of the century building over the sea */
+      const defs = `
+        <linearGradient id="r1-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#05070f"/><stop offset="100%" stop-color="#1d2436"/>
+        </linearGradient>
+        <linearGradient id="r1-sea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#26314a"/><stop offset="100%" stop-color="#0a0e18"/>
+        </linearGradient>`;
+      const body = `
+        <rect width="800" height="760" fill="url(#r1-sky)"/>
+        <g fill="#10141f">
+          <ellipse cx="240" cy="180" rx="420" ry="120"><animateTransform attributeName="transform" type="translate" values="-70,0;70,0;-70,0" dur="12s" repeatCount="indefinite"/></ellipse>
+          <ellipse cx="620" cy="300" rx="440" ry="130"><animateTransform attributeName="transform" type="translate" values="60,10;-80,-10;60,10" dur="15s" repeatCount="indefinite"/></ellipse>
+          <ellipse cx="400" cy="90" rx="480" ry="100"><animateTransform attributeName="transform" type="translate" values="-50,0;50,0;-50,0" dur="10s" repeatCount="indefinite"/></ellipse>
+        </g>
+        <rect y="760" width="800" height="440" fill="url(#r1-sea)"/>
+        <g stroke="#5a76a8" stroke-width="6" fill="none">
+          <path d="M-60,830 q90,-56 180,0 t180,0 t180,0 t180,0" opacity=".7">
+            <animateTransform attributeName="transform" type="translate" values="0,0;-90,18;0,0" dur="2.8s" repeatCount="indefinite"/>
+          </path>
+          <path d="M-100,960 q100,-64 200,0 t200,0 t200,0 t200,0" opacity=".5">
+            <animateTransform attributeName="transform" type="translate" values="0,0;80,12;0,0" dur="2.2s" repeatCount="indefinite"/>
+          </path>
+        </g>
+        <g fill="#cfe0f5" opacity=".7">
+          <ellipse cx="200" cy="836" rx="80" ry="10"><animate attributeName="opacity" values=".7;.2;.7" dur="1.6s" repeatCount="indefinite"/></ellipse>
+          <ellipse cx="580" cy="962" rx="100" ry="12"><animate attributeName="opacity" values=".25;.7;.25" dur="2.1s" repeatCount="indefinite"/></ellipse>
+        </g>
+        <!-- the light, small and defiant -->
+        <g transform="translate(400,700)">
+          <path d="M-18,60 L18,60 L11,-60 L-11,-60 Z" fill="#8a92a2"/>
+          <rect x="-8" y="-80" width="16" height="22" fill="#ffe9a8"/>
+          <polygon points="0,-70 260,-108 260,-30" fill="#ffe9a8" opacity=".16">
+            <animateTransform attributeName="transform" type="rotate" values="-30 0 -70;18 0 -70;-30 0 -70" dur="7s" repeatCount="indefinite"/>
+          </polygon>
+        </g>
+        ${storming('r1', { seed: 5 })}`;
+      return wrap(defs, body);
+    }
+    if (n === 2) {
+      /* the lock-up: Voss will speak, but only to Kel */
+      const defs = `${lanternGlow(0, 0, 0, 'r2-glow')}`;
+      const body = `
+        <rect width="800" height="1200" fill="#1d1c25"/>
+        <g stroke="#121218" stroke-width="4" opacity=".8">
+          <path d="M0,260 H800 M0,520 H800 M0,780 H800 M0,1040 H800"/>
+          <path d="M260,260 V520 M560,260 V520 M400,520 V780 M160,780 V1040 M640,780 V1040"/>
+        </g>
+        <g transform="translate(400,470)">
+          <rect x="-150" y="-120" width="300" height="240" rx="10" fill="#05070d"/>
+          <rect x="-134" y="-104" width="268" height="208" fill="#0d1322"/>
+          <g stroke="#9fb2cc" stroke-width="2.5" opacity=".5" stroke-linecap="round">
+            <line x1="-90" y1="-90" x2="-102" y2="-20"/><line x1="-10" y1="-100" x2="-22" y2="-30"/><line x1="80" y1="-84" x2="68" y2="-10"/>
+            <animateTransform attributeName="transform" type="translate" values="0,-110;40,110" dur=".8s" repeatCount="indefinite" additive="sum"/>
+          </g>
+          <rect x="-134" y="-104" width="268" height="208" fill="#dfe8ff" opacity="0">
+            <animate attributeName="opacity" values="0;0;.6;.1;.68;0;0" keyTimes="0;.5;.53;.55;.57;.63;1" dur="8s" repeatCount="indefinite"/>
+          </rect>
+          <g stroke="#121218" stroke-width="14"><path d="M-78,-120 V120 M0,-120 V120 M78,-120 V120 M-150,0 H150"/></g>
+        </g>
+        <!-- Voss silhouetted against the window, waiting -->
+        <g transform="translate(400,880)">
+          <ellipse cx="0" cy="164" rx="110" ry="26" fill="#0d0c12"/>
+          <path d="M-70,160 Q-76,20 0,4 Q76,20 70,160 Z" fill="#241d30"/>
+          <circle cx="0" cy="-28" r="42" fill="#14101c"/>
+          <path d="M-42,-42 Q-38,-76 0,-76 Q38,-76 42,-42 L44,-32 L-44,-32 Z" fill="#0f0c16"/>
+          <circle cx="30" cy="-58" r="5" fill="#c9a24a" opacity=".85"/>
+        </g>
+        <g transform="translate(140,760)">
+          <circle cx="0" cy="0" r="110" fill="url(#r2-glow)"/>
+          <rect x="-12" y="-18" width="24" height="34" rx="5" fill="#1a140b"/>
+          <rect x="-7" y="-12" width="14" height="22" fill="#ffd98a"><animate attributeName="opacity" values="1;.7;1" dur="2s" repeatCount="indefinite"/></rect>
+        </g>`;
+      return wrap(defs, body);
+    }
+    /* n === 3: the Marigold going down, 1893 — an old sepia painting come alive */
+    const defs = `
+      <linearGradient id="r3-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4a3d2c"/><stop offset="100%" stop-color="#7a6648"/>
+      </linearGradient>
+      <linearGradient id="r3-sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#5c4c34"/><stop offset="100%" stop-color="#2c2318"/>
+      </linearGradient>
+      <radialGradient id="r3-vig" cx="50%" cy="50%" r="72%">
+        <stop offset="60%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#1c1408" stop-opacity=".85"/>
+      </radialGradient>`;
+    const body = `
+      <rect width="800" height="700" fill="url(#r3-sky)"/>
+      <rect y="700" width="800" height="500" fill="url(#r3-sea)"/>
+      <g stroke="#8a7452" stroke-width="5" fill="none" opacity=".7">
+        <path d="M-40,760 q80,-50 160,0 t160,0 t160,0 t160,0">
+          <animateTransform attributeName="transform" type="translate" values="0,0;-70,16;0,0" dur="3s" repeatCount="indefinite"/>
+        </path>
+        <path d="M-80,880 q90,-56 180,0 t180,0 t180,0 t180,0" opacity=".6">
+          <animateTransform attributeName="transform" type="translate" values="0,0;60,10;0,0" dur="2.4s" repeatCount="indefinite"/>
+        </path>
+      </g>
+      <!-- the Marigold, heeling hard -->
+      <g transform="translate(400,720)">
+        <animateTransform attributeName="transform" type="rotate" values="-14 400 720;-18 400 720;-14 400 720" dur="4s" repeatCount="indefinite"/>
+        <path d="M-140,20 Q0,70 150,10 L118,74 Q0,108 -104,74 Z" fill="#2c2014"/>
+        <rect x="-8" y="-190" width="10" height="210" fill="#2c2014"/>
+        <path d="M4,-184 L110,-40 L4,-40 Z" fill="#c9b183" opacity=".9"/>
+        <path d="M-6,-176 L-92,-48 L-6,-48 Z" fill="#b39c6e" opacity=".9"/>
+        <path d="M-30,-196 L28,-196" stroke="#2c2014" stroke-width="5"/>
+      </g>
+      <g fill="#d8c49a" opacity=".8">
+        <ellipse cx="300" cy="790" rx="60" ry="9"><animate attributeName="opacity" values=".8;.2;.8" dur="1.8s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="520" cy="820" rx="70" ry="10"><animate attributeName="opacity" values=".3;.8;.3" dur="2.2s" repeatCount="indefinite"/></ellipse>
+      </g>
+      <text x="400" y="1080" font-size="44" fill="#e0d0a8" text-anchor="middle" font-family="Georgia" font-style="italic" opacity=".9">1893</text>
+      <rect width="800" height="1200" fill="url(#r3-vig)"/>
+      ${storming('r3', { seed: 3, noFlash: true })}`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ FINALE CUTSCENE (ch3) */
+  function finale(n) {
+    if (n === 1) {
+      /* light AND bell against the storm; the black schooner appears */
+      const defs = `
+        <linearGradient id="f1-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#05070f"/><stop offset="100%" stop-color="#1a2133"/>
+        </linearGradient>
+        <linearGradient id="f1-sea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#26314a"/><stop offset="100%" stop-color="#0a0e18"/>
+        </linearGradient>
+        ${lanternGlow(0, 0, 0, 'f1-glow')}`;
+      const body = `
+        <rect width="800" height="740" fill="url(#f1-sky)"/>
+        <rect y="740" width="800" height="460" fill="url(#f1-sea)"/>
+        <g stroke="#5a76a8" stroke-width="6" fill="none" opacity=".65">
+          <path d="M-60,820 q90,-56 180,0 t180,0 t180,0 t180,0">
+            <animateTransform attributeName="transform" type="translate" values="0,0;-90,16;0,0" dur="2.6s" repeatCount="indefinite"/>
+          </path>
+        </g>
+        <!-- lighthouse, beam blazing full -->
+        <g transform="translate(190,600)">
+          <path d="M-34,180 L34,180 L22,-100 L-22,-100 Z" fill="#aab2c2"/>
+          <path d="M-28,20 L28,20 L26,-20 L-26,-20 Z" fill="#8a3a46"/>
+          <rect x="-15" y="-134" width="30" height="36" fill="#ffe9a8"><animate attributeName="opacity" values="1;.85;1" dur="1s" repeatCount="indefinite"/></rect>
+          <circle cx="0" cy="-116" r="80" fill="url(#f1-glow)"/>
+          <polygon points="0,-116 560,-210 560,-30" fill="#ffe9a8" opacity=".3">
+            <animateTransform attributeName="transform" type="rotate" values="-20 0 -116;26 0 -116;-20 0 -116" dur="5s" repeatCount="indefinite"/>
+          </polygon>
+        </g>
+        <!-- bell rock, bell hammering -->
+        <g transform="translate(610,690)">
+          <path d="M-70,140 L70,140 L56,-30 L-56,-30 Z" fill="#3d434f"/>
+          <path d="M-62,-30 L62,-30 L0,-84 Z" fill="#262a33"/>
+          <path d="M-38,90 L38,90 L38,0 Q0,-26 -38,0 Z" fill="#0d0f16"/>
+          <g transform="translate(0,26)">
+            <g>
+              <animateTransform attributeName="transform" type="rotate" values="-24 0 -6;24 0 -6;-24 0 -6" dur="1.1s" repeatCount="indefinite"/>
+              <path d="M-22,44 Q-25,4 0,0 Q25,4 22,44 L28,50 Q0,58 -28,50 Z" fill="#c9a24a"/>
+            </g>
+          </g>
+          <g stroke="#ffe9a8" fill="none" opacity=".7">
+            <circle cx="0" cy="30" r="46" stroke-width="3"><animate attributeName="r" values="40;90" dur="1.1s" repeatCount="indefinite"/><animate attributeName="opacity" values=".7;0" dur="1.1s" repeatCount="indefinite"/></circle>
+          </g>
+        </g>
+        <!-- the Collector's schooner, black on black -->
+        <g>
+          <animateTransform attributeName="transform" type="translate" values="0,6;0,-8;0,6" dur="3s" repeatCount="indefinite"/>
+          <g transform="translate(420,880)">
+            <path d="M-150,30 Q0,68 156,24 L128,84 Q0,112 -114,84 Z" fill="#0a0c14"/>
+            <rect x="-6" y="-150" width="9" height="180" fill="#0a0c14"/>
+            <rect x="66" y="-110" width="7" height="140" fill="#0a0c14"/>
+            <path d="M3,-144 L86,-36 L3,-36 Z" fill="#1d2130"/>
+            <path d="M73,-104 L130,-30 L73,-30 Z" fill="#1d2130"/>
+            <circle cx="-96" cy="18" r="6" fill="#c25454"><animate attributeName="opacity" values="1;.4;1" dur="1.6s" repeatCount="indefinite"/></circle>
+          </g>
+        </g>
+        ${storming('f1', { seed: 9, flashDur: '6s' })}`;
+      return wrap(defs, body);
+    }
+    if (n === 2) {
+      /* forced wide, into the harbor mouth — and the waiting constable */
+      const defs = `
+        <linearGradient id="f2-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0a0d18"/><stop offset="100%" stop-color="#232a3d"/>
+        </linearGradient>
+        <linearGradient id="f2-sea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2c3752"/><stop offset="100%" stop-color="#0d1220"/>
+        </linearGradient>`;
+      const body = `
+        <rect width="800" height="700" fill="url(#f2-sky)"/>
+        <rect y="700" width="800" height="500" fill="url(#f2-sea)"/>
+        <!-- harbor arms closing around the schooner -->
+        <path d="M0,1200 L0,860 Q140,820 260,850 L300,870 L300,1200 Z" fill="#141a26"/>
+        <path d="M800,1200 L800,840 Q660,800 540,836 L500,860 L500,1200 Z" fill="#141a26"/>
+        <g transform="translate(258,842)"><rect x="-7" y="-54" width="14" height="60" fill="#241c12"/><circle cx="0" cy="-62" r="10" fill="#8ae0a0"><animate attributeName="opacity" values="1;.35;1" dur="1.8s" repeatCount="indefinite"/></circle></g>
+        <g transform="translate(542,830)"><rect x="-7" y="-54" width="14" height="60" fill="#241c12"/><circle cx="0" cy="-62" r="10" fill="#c25454"><animate attributeName="opacity" values=".4;1;.4" dur="1.8s" repeatCount="indefinite"/></circle></g>
+        <!-- schooner, sails down, giving up -->
+        <g transform="translate(400,930)">
+          <animateTransform attributeName="transform" type="translate" values="400,930;400,922;400,930" dur="3.4s" repeatCount="indefinite"/>
+          <path d="M-110,20 Q0,50 114,16 L92,62 Q0,84 -84,62 Z" fill="#0a0c14"/>
+          <rect x="-5" y="-110" width="8" height="130" fill="#0a0c14"/>
+          <path d="M-30,-20 Q0,-6 34,-18 L30,-2 Q0,8 -26,-2 Z" fill="#1d2130"/>
+        </g>
+        <!-- constable's launch, lamps blazing -->
+        <g transform="translate(400,1090)">
+          <animateTransform attributeName="transform" type="translate" values="400,1090;400,1084;400,1090" dur="2.8s" repeatCount="indefinite"/>
+          <path d="M-90,10 Q0,36 92,6 L74,40 Q0,58 -66,40 Z" fill="#1d2330"/>
+          <rect x="-40" y="-24" width="80" height="34" rx="6" fill="#242c3c"/>
+          <circle cx="-52" cy="-10" r="8" fill="#ffd98a"><animate attributeName="opacity" values="1;.6;1" dur="1.2s" repeatCount="indefinite"/></circle>
+          <circle cx="52" cy="-10" r="8" fill="#ffd98a"><animate attributeName="opacity" values=".6;1;.6" dur="1.2s" repeatCount="indefinite"/></circle>
+          <path d="M-20,-24 L-20,-52 L14,-38 L-20,-30 Z" fill="#c9a24a"/>
+        </g>
+        <!-- the beam still sweeping overhead -->
+        <polygon points="-40,180 840,60 840,300" fill="#ffe9a8" opacity=".1">
+          <animateTransform attributeName="transform" type="translate" values="0,-40;0,60;0,-40" dur="5s" repeatCount="indefinite"/>
+        </polygon>
+        ${storming('f2', { seed: 14 })}`;
+      return wrap(defs, body);
+    }
+    /* n === 3: dawn after the storm; the strongbox on the jetty */
+    const defs = `
+      <linearGradient id="f3-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2a3a68"/><stop offset="58%" stop-color="#b06a5a"/><stop offset="100%" stop-color="#f0b26a"/>
+      </linearGradient>
+      <linearGradient id="f3-sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#d89a62"/><stop offset="100%" stop-color="#1d2545"/>
+      </linearGradient>
+      ${lanternGlow(0, 0, 0, 'f3-glow')}`;
+    const body = `
+      <rect width="800" height="720" fill="url(#f3-sky)"/>
+      <circle cx="400" cy="700" r="130" fill="#ffdf9a" opacity=".85"/>
+      <rect y="720" width="800" height="480" fill="url(#f3-sea)"/>
+      <path d="M340,720 L460,720 L436,1200 L364,1200 Z" fill="#ffd98a" opacity=".25"/>
+      <g stroke="#e8b477" stroke-width="2.5" fill="none" opacity=".6">
+        <path d="M90,790 q40,-7 84,0 t76,0"/><path d="M440,860 q46,-8 92,0 t84,0"/>
+      </g>
+      <g stroke="#cfd4de" stroke-width="4" fill="none" stroke-linecap="round">
+        <g><path d="M250,250 q11,-13 22,0 q11,-13 22,0"/><animateTransform attributeName="transform" type="translate" values="0,0;30,-12;0,0" dur="8s" repeatCount="indefinite"/></g>
+        <g><path d="M520,180 q9,-11 18,0 q9,-11 18,0"/><animateTransform attributeName="transform" type="translate" values="0,0;-26,8;0,0" dur="10s" repeatCount="indefinite"/></g>
+      </g>
+      <!-- jetty with the raised strongbox and the family -->
+      <path d="M0,1010 L800,960 L800,1200 L0,1200 Z" fill="#33291d"/>
+      <g stroke="#1c150c" stroke-width="4" opacity=".6"><path d="M0,1090 L800,1044 M0,1160 L800,1120"/></g>
+      <g transform="translate(400,980)">
+        <circle cx="0" cy="-20" r="110" fill="url(#f3-glow)" opacity=".6"/>
+        <path d="M-70,0 L70,0 L60,-64 L-60,-64 Z" fill="#4a3826" stroke="#241a10" stroke-width="5"/>
+        <path d="M-60,-64 L60,-64 L48,-92 L-48,-92 Z" fill="#5a4527" stroke="#241a10" stroke-width="5"/>
+        <path d="M-60,-64 L60,-64" stroke="#c9a24a" stroke-width="6"/>
+        <circle cx="0" cy="-38" r="9" fill="#c9a24a"/>
+        <path d="M-40,-92 Q0,-118 40,-92" stroke="#8a7a5c" stroke-width="4" fill="none"/>
+      </g>
+      ${figure(255, 900, 150, '#2c3652', { cap: '#1d2540' })}
+      ${figure(316, 912, 136, '#3d4a63', { extra: '<path d="M-9,32 L-24,26" stroke="#3d4a63" stroke-width="5"/>' })}
+      ${figure(510, 908, 142, '#20304a', { hood: '#31486b' })}
+      <!-- one glittering thief, invited to the occasion -->
+      <g transform="translate(560,760)">
+        <path d="M0,0 q-12,-14 -26,-6 q10,2 14,9 q-14,2 -22,12 q14,-2 22,2 Z" fill="#14161c">
+          <animateTransform attributeName="transform" type="translate" values="0,0;0,-4;0,0" dur="2.6s" repeatCount="indefinite"/>
+        </path>
+      </g>`;
+    return wrap(defs, body);
+  }
+
+  /* ------------------------------------------------ ENDING CH3 */
+  function ending3() {
+    const defs = `
+      <linearGradient id="e3-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3a4a80"/><stop offset="55%" stop-color="#c07a5e"/><stop offset="100%" stop-color="#f5c078"/>
+      </linearGradient>
+      <linearGradient id="e3-sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e0a468"/><stop offset="30%" stop-color="#5a5a8a"/><stop offset="100%" stop-color="#1d2545"/>
+      </linearGradient>`;
+    const body = `
+      <rect width="800" height="760" fill="url(#e3-sky)"/>
+      <circle cx="400" cy="740" r="170" fill="#ffdf9a" opacity=".9"/>
+      <circle cx="400" cy="740" r="260" fill="#ffdf9a" opacity=".22"/>
+      <rect y="760" width="800" height="440" fill="url(#e3-sea)"/>
+      <path d="M330,760 L470,760 L440,1200 L360,1200 Z" fill="#ffd98a" opacity=".28"/>
+      <!-- the light and the bell, either side of a calm dawn -->
+      <g transform="translate(150,700)">
+        <path d="M-100,500 L100,500 L80,60 Q40,10 0,6 Q-40,10 -80,60 Z" fill="#191527"/>
+        <path d="M-34,60 L34,60 L22,-190 L-22,-190 Z" fill="#e8dcc4"/>
+        <path d="M-28,-40 L28,-40 L26,-80 L-26,-80 Z" fill="#a8434f"/>
+        <rect x="-14" y="-222" width="28" height="34" fill="#3d3a4a"/>
+        <path d="M-18,-222 L18,-222 L0,-242 Z" fill="#3d3a4a"/>
+      </g>
+      <g transform="translate(650,760)">
+        <path d="M-80,440 L80,440 L60,-10 Q30,-40 0,-44 Q-30,-40 -60,-10 Z" fill="#232630"/>
+        <g transform="translate(0,-80)">
+          <path d="M-44,80 L44,80 L36,-12 L-36,-12 Z" fill="#3d434f"/>
+          <path d="M-40,-12 L40,-12 L0,-48 Z" fill="#262a33"/>
+          <path d="M-24,58 L24,58 L24,6 Q0,-12 -24,6 Z" fill="#0d0f16"/>
+          <g transform="translate(0,24)">
+            <g>
+              <animateTransform attributeName="transform" type="rotate" values="-14 0 -3;14 0 -3;-14 0 -3" dur="1.8s" repeatCount="indefinite"/>
+              <path d="M-15,28 Q-17,2 0,-1 Q17,2 15,28 L19,32 Q0,38 -19,32 Z" fill="#c9a24a"/>
+            </g>
+          </g>
+        </g>
+      </g>
+      <g stroke="#e8b477" stroke-width="2.5" fill="none" opacity=".6">
+        <path d="M110,830 q40,-7 84,0 t76,0"/><path d="M460,910 q46,-8 92,0 t84,0"/>
+      </g>
+      <g stroke="#cfd4de" stroke-width="4" fill="none" stroke-linecap="round">
+        <g><path d="M320,260 q11,-13 22,0 q11,-13 22,0"/><animateTransform attributeName="transform" type="translate" values="0,0;34,-10;0,0" dur="9s" repeatCount="indefinite"/></g>
+        <g><path d="M470,340 q9,-11 18,0 q9,-11 18,0"/><animateTransform attributeName="transform" type="translate" values="0,0;-24,10;0,0" dur="11s" repeatCount="indefinite"/></g>
+      </g>`;
+    return wrap(defs, body);
+  }
+
   /* ------------------------------------------------ ENDING CH2 */
   function ending2() {
     const defs = `
@@ -1474,7 +2072,9 @@ const Art = (() => {
     oars: icon(`<g transform="rotate(38 24 24)"><rect x="21.5" y="10" width="5" height="32" rx="2.5" fill="#8a7a5c"/><path d="M21.5,10 Q14,2 24,-2 Q33,3 26.5,11 Z" transform="translate(0,4)" fill="#8a7a5c"/></g><g transform="rotate(-38 24 24)"><rect x="21.5" y="10" width="5" height="32" rx="2.5" fill="#7a6a4e"/><path d="M21.5,10 Q14,2 24,-2 Q33,3 26.5,11 Z" transform="translate(0,4)" fill="#7a6a4e"/></g>`),
     boathook: icon(`<g transform="rotate(30 24 24)"><rect x="21.5" y="8" width="5" height="36" rx="2.5" fill="#8a7a5c"/><path d="M21.5,8 Q10,1 13,-8 Q24,-5 27,7 Z" transform="translate(0,7)" fill="#9aa2b2"/></g>`),
     strikerchain: icon(`<g stroke="#b8b2a0" stroke-width="3" fill="none"><ellipse cx="20" cy="10" rx="5" ry="7" transform="rotate(-16 20 10)"/><ellipse cx="25" cy="20" rx="5" ry="7" transform="rotate(10 25 20)"/><ellipse cx="27" cy="31" rx="5" ry="7" transform="rotate(-6 27 31)"/></g><circle cx="28" cy="42" r="6" fill="#d9d2c0"/>`),
+    fireiron: icon(`<g transform="rotate(32 24 24)"><rect x="21.5" y="4" width="5" height="34" rx="2.5" fill="#5a5a66"/><circle cx="24" cy="2" r="5" fill="none" stroke="#5a5a66" stroke-width="4"/><path d="M21.5,38 Q12,42 14,48 L24,44 Z" fill="#5a5a66"/></g>`),
   };
 
-  return { dock, exterior, cottage, lamp, cliffs, cave, shore, bellrock, prologue, prologue2, title, ending, ending2, portraits, icons };
+  return { dock, exterior, cottage, lamp, cliffs, cave, shore, bellrock, jail, dockStorm, office,
+    prologue, prologue2, prologue3, finale, title, ending, ending2, ending3, portraits, icons };
 })();

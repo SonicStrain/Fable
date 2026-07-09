@@ -99,13 +99,14 @@
     refresh() { renderScene(); },
     dialog(nodeId) { openDialog(nodeId); },
     puzzle(id) { openPuzzle(id); },
+    cutscene(key) { playCutscene(key); },
     checkCliffs() {
       if (state.flags.lensSolved && state.flags.logDecoded && !state.flags.cliffsOpen) {
         state.flags.cliffsOpen = true; save();
         setTimeout(() => toast('New path revealed: The Black Cliffs'), 1400);
       }
     },
-    endGame() { setTimeout(showEnding, 400); },
+    endGame() { triggerEndGame(); },
   };
 
   /* ---------------- screens ---------------- */
@@ -177,25 +178,43 @@
   }
 
   function enterGame() {
-    clearTimeout(prologueTimer);
+    clearTimeout(cutsceneTimer);
     if (!state.introDone) { state.introDone = true; save(); }
     show(el.game);
     renderScene(); renderInventory();
   }
 
-  /* ---------------- prologue cutscene ---------------- */
-  let prologueSlide = 0;
-  let prologueTimer = null;
+  /* ---------------- cutscene player (prologues + mid-story cutscenes) ---------------- */
+  let cutsceneSlides = [];
+  let cutsceneIndex = 0;
+  let cutsceneTimer = null;
+  let cutsceneOnDone = enterGame;
 
   function showPrologue() {
-    prologueSlide = 0;
+    cutsceneSlides = chapterCfg().prologue;
+    cutsceneOnDone = enterGame;
+    cutsceneIndex = 0;
     show(el.prologue);
-    paintPrologue();
+    paintSlide();
   }
 
-  function paintPrologue() {
-    clearTimeout(prologueTimer);
-    const s = chapterCfg().prologue[prologueSlide];
+  /* play a chapter-defined mid-story cutscene by key (Chapters[ch].cutscenes[key]) */
+  function playCutscene(key) {
+    const cs = chapterCfg().cutscenes && chapterCfg().cutscenes[key];
+    if (!cs) return;
+    cutsceneSlides = cs.slides;
+    cutsceneIndex = 0;
+    cutsceneOnDone = () => {
+      if (cs.next.type === 'dialog') { show(el.game); openDialog(cs.next.id); }
+      else if (cs.next.type === 'end') { triggerEndGame(); }
+    };
+    show(el.prologue);
+    paintSlide();
+  }
+
+  function paintSlide() {
+    clearTimeout(cutsceneTimer);
+    const s = cutsceneSlides[cutsceneIndex];
     el.prologueArt.innerHTML = s.art();
     // retrigger the caption entrance animation
     const cap = el.prologueCaption;
@@ -203,20 +222,27 @@
     cap.style.animation = 'none';
     void cap.offsetWidth;
     cap.style.animation = '';
-    prologueTimer = setTimeout(nextPrologue, 8500);
+    cutsceneTimer = setTimeout(nextSlide, s.duration || 8500);
   }
 
-  function nextPrologue() {
-    prologueSlide++;
-    if (prologueSlide >= chapterCfg().prologue.length) enterGame();
-    else paintPrologue();
+  function nextSlide() {
+    // a manual tap can race the slide's own auto-advance timer; clear it so
+    // the stale timeout can never re-fire cutsceneOnDone() a second time
+    clearTimeout(cutsceneTimer);
+    cutsceneIndex++;
+    if (cutsceneIndex >= cutsceneSlides.length) cutsceneOnDone();
+    else paintSlide();
   }
+
+  function triggerEndGame() { setTimeout(showEnding, 400); }
 
   function showEnding() {
     closeAllOverlays();
     const cfg = chapterCfg().ending;
     const meta = loadMeta();
-    const unlocksCh2 = chapterId === 'ch1' && !meta.ch1Done;
+    const justFinished = !meta[chapterId + 'Done'];
+    const nextId = Object.keys(Chapters).find(id => Chapters[id].requires === chapterId);
+    const unlocksNext = justFinished && !!nextId;
     meta[chapterId + 'Done'] = true;
     saveMeta(meta);
     el.endingArt.innerHTML = cfg.art();
@@ -237,22 +263,22 @@
     /* action buttons — always visible, never below the fold */
     const btns = $('ending-buttons');
     btns.innerHTML = '';
-    if (unlocksCh2) {
+    if (unlocksNext) {
       const b = document.createElement('div');
       b.className = 'unlock-banner';
-      b.textContent = '✦ Chapter Two unlocked: ' + Chapters.ch2.name;
+      b.textContent = '✦ ' + Chapters[nextId].label + ' unlocked: ' + Chapters[nextId].name;
       b.style.opacity = '0';
       b.style.transition = 'opacity 1.2s ease';
       btns.appendChild(b);
       setTimeout(() => { b.style.opacity = '1'; }, 1200);
     }
-    if (chapterId === 'ch1' && Chapters.ch2) {
-      const hasCh2Save = !!loadSave('ch2');
+    if (nextId) {
+      const hasNextSave = !!loadSave(nextId);
       const nx = document.createElement('button');
       nx.className = 'btn btn-primary';
       nx.id = 'btn-next-chapter';
-      nx.textContent = (hasCh2Save ? 'Continue Chapter Two' : 'Begin Chapter Two') + ' ▸';
-      nx.addEventListener('click', () => startGame(!hasCh2Save, 'ch2'));
+      nx.textContent = (hasNextSave ? 'Continue ' + Chapters[nextId].label : 'Begin ' + Chapters[nextId].label) + ' ▸';
+      nx.addEventListener('click', () => startGame(!hasNextSave, nextId));
       btns.appendChild(nx);
     }
     const menuBtn = document.createElement('button');
@@ -484,6 +510,7 @@
     else if (p.type === 'cipher') buildCipher(p);
     else if (p.type === 'lens') buildLens(p);
     else if (p.type === 'bell') buildBell(p);
+    else if (p.type === 'reserve') buildReserve(p);
 
     el.puzzleOverlay.classList.remove('hidden');
   }
@@ -776,6 +803,86 @@
     });
   }
 
+  /* storm reserve: catch a continuously-rotating flywheel at the top mark */
+  function buildReserve(p) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 300 300');
+    svg.setAttribute('id', 'reserve-svg');
+    svg.innerHTML =
+      '<circle cx="150" cy="150" r="108" fill="none" stroke="#26314a" stroke-width="10"/>' +
+      '<path id="topzone" d="M118,46 A108,108 0 0 1 182,46" fill="none" stroke="#9a7a3a" stroke-width="12" stroke-linecap="round"/>';
+
+    const wheelG = document.createElementNS(NS, 'g');
+    wheelG.innerHTML =
+      '<g stroke="#7a6248" stroke-width="8" stroke-linecap="round">' +
+      '<line x1="150" y1="150" x2="150" y2="42"/>' +
+      '<line x1="150" y1="150" x2="243" y2="204"/>' +
+      '<line x1="150" y1="150" x2="57" y2="204"/>' +
+      '</g>' +
+      '<circle cx="150" cy="42" r="14" fill="#c9a24a"/>' +
+      '<circle cx="150" cy="150" r="18" fill="#5a4632" stroke="#2c2011" stroke-width="4"/>';
+    wheelG.style.transformOrigin = '150px 150px';
+    svg.appendChild(wheelG);
+    el.puzzlePanel.appendChild(svg);
+
+    const pips = document.createElement('div');
+    pips.className = 'bell-progress';
+    const pipEls = [];
+    for (let i = 0; i < p.pulls; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'bell-pip';
+      pips.appendChild(pip); pipEls.push(pip);
+    }
+    el.puzzlePanel.appendChild(pips);
+
+    const note = document.createElement('div');
+    note.className = 'solved-note';
+    el.puzzlePanel.appendChild(note);
+
+    const actions = document.createElement('div');
+    actions.className = 'puzzle-actions';
+    const catchBtn = document.createElement('button');
+    catchBtn.className = 'btn btn-primary bell-pull-btn';
+    catchBtn.textContent = 'CATCH';
+    actions.appendChild(catchBtn);
+    el.puzzlePanel.appendChild(actions);
+
+    const topzone = svg.querySelector('#topzone');
+    let hits = 0, running = true;
+    const t0 = performance.now();
+    const PERIOD = 2600, TOL = 18;
+
+    function frame(now) {
+      if (!running || !document.body.contains(svg)) return;
+      const angle = ((now - t0) / PERIOD * 360) % 360;
+      wheelG.style.transform = 'rotate(' + angle.toFixed(2) + 'deg)';
+      const diff = Math.min(angle, 360 - angle);
+      const inzone = diff < TOL;
+      svg.dataset.inzone = inzone ? '1' : '0';
+      svg.dataset.diff = diff.toFixed(2);
+      topzone.setAttribute('stroke', inzone ? '#e8b44a' : '#9a7a3a');
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    catchBtn.addEventListener('click', () => {
+      if (!running) return;
+      if (svg.dataset.inzone === '1') {
+        hits++;
+        pipEls[hits - 1].classList.add('hit');
+        Music.clank(hits);
+        note.textContent = ['The flywheel bites...', 'Charge building...', 'The reserve holds!'][Math.min(hits - 1, 2)];
+        if (hits >= p.pulls) {
+          running = false;
+          setTimeout(() => solvePuzzle(p), 900);
+        }
+      } else {
+        note.textContent = 'Missed the notch — wait for the gold mark at the top.';
+      }
+    });
+  }
+
   /* ---------------- overlays / chrome ---------------- */
   function closeAllOverlays() {
     [el.dialogOverlay, el.journalOverlay, el.puzzleOverlay, el.menuOverlay, el.howtoOverlay]
@@ -850,8 +957,8 @@
     });
 
     // prologue controls
-    el.prologue.addEventListener('click', nextPrologue);
-    $('btn-skip').addEventListener('click', ev => { ev.stopPropagation(); enterGame(); });
+    el.prologue.addEventListener('click', nextSlide);
+    $('btn-skip').addEventListener('click', ev => { ev.stopPropagation(); clearTimeout(cutsceneTimer); cutsceneOnDone(); });
   }
 
   document.addEventListener('DOMContentLoaded', init);

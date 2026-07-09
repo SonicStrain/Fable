@@ -152,6 +152,8 @@ function ok(cond, msg) {
   ok((await page.locator('#btn-continue').isHidden()), 'no Continue button without a save');
   ok(await page.locator('#lock-ch2').isVisible(), 'Chapter Two starts locked');
   ok(await page.locator('#btn-new-ch2').isHidden(), 'no way to start Chapter Two while locked');
+  ok(await page.locator('#lock-ch3').isVisible(), 'Chapter Three starts locked');
+  ok(await page.locator('#btn-new-ch3').isHidden(), 'no way to start Chapter Three while locked');
   await shot('01-title');
 
   console.log('\n== New game & prologue cutscene ==');
@@ -531,19 +533,201 @@ function ok(cond, msg) {
   await page.waitForTimeout(6500);
   ok(await page.locator('#ending-text p').count() === 4, 'ch2 epilogue has 4 paragraphs');
   await shot('24-ch2-ending');
-  const meta = await page.evaluate(() => JSON.parse(localStorage.getItem('greyharbor_meta_v1')));
+  let meta = await page.evaluate(() => JSON.parse(localStorage.getItem('greyharbor_meta_v1')));
   ok(meta.ch1Done === true && meta.ch2Done === true, 'both chapters recorded as finished');
+  ok(await page.locator('.unlock-banner').isVisible(), 'ch2 ending announces Chapter Three unlock');
+  const nextBox2 = await page.locator('#btn-next-chapter').boundingBox();
+  ok(nextBox2 && nextBox2.y >= 0 && nextBox2.y + nextBox2.height <= vh, 'Begin Chapter Three button fully on screen');
+  ok((await page.locator('#btn-next-chapter').textContent()).includes('Begin Chapter Three'), 'primary button offers Chapter Three');
+
+  console.log('\n== CHAPTER THREE: The Wreck of the Marigold (straight from the ending) ==');
+  SAVEKEY = 'greyharbor_save_ch3_v1';
+  await page.locator('#btn-next-chapter').click();
+  await page.waitForTimeout(500);
+  ok(await page.locator('#prologue-screen').isVisible(), 'ch3 prologue plays');
+  const w1 = await page.locator('#prologue-caption').textContent();
+  ok(w1.includes('storm'), 'ch3 prologue slide 1 (the coming storm)');
+  await shot('25-ch3-prologue-1');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(350);
+  ok((await page.locator('#prologue-caption').textContent()).includes('Voss'), 'ch3 prologue slide 2 (Voss will speak)');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(350);
+  ok((await page.locator('#prologue-caption').textContent()).includes('Marigold'), 'ch3 prologue slide 3 (the Marigold, 1893)');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(500);
+  s = await state2();
+  ok(s.scene === 'jail', 'ch3 starts in the lock-up');
+  await shot('26-ch3-jail');
+
+  await tap2('c_exit');
+  ok((await captionText()).includes('Hear him out'), 'cannot leave before hearing Voss out');
+  await tap2('c_voss');
+  d = await advanceDialog();
+  ok(!d.closed && d.choices.length === 2, 'Voss briefing offers a choice');
+  await pickChoice('what\'s down there');
+  d = await advanceDialog();
+  ok(d.closed, 'Voss briefing complete');
+  s = await state2();
+  ok(s.flags.c_met === true, 'mission accepted from Voss');
+  ok(s.clues.includes('c_collector') && s.clues.includes('c_floorboard'), 'Collector + floorboard clues recorded');
+
+  console.log('\n== The storm-lashed dock ==');
+  await tap2('c_exit');
+  s = await state2();
+  ok(s.scene === 'dockstorm', 'reached the storm dock');
+  await shot('27-ch3-dockstorm');
+  await tap2('c_marta');
+  d = await advanceDialog();
+  ok(d.closed, 'Marta dialogue completes');
+  s = await state2();
+  ok(s.flags.c_martaTold === true && s.clues.includes('c_marigold'), 'Marta tells the Marigold\'s history');
+  await tap2('c_tocliffs3');
+  ok((await captionText()).includes('don\'t even know what you\'re looking for'), 'cliffs blocked before the chart is found');
+  await tap2('c_officedoor');
+  ok((await captionText()).includes('Locked'), 'office door is locked');
+
+  console.log('\n== The harbor office & the hidden chart ==');
+  await tap2('c_ledge');
+  s = await state2();
+  ok(s.inv.includes('officekey'), 'took the office key from the ledge');
+  await useItem('officekey', 'c_officedoor');
+  s = await state2();
+  ok(s.flags.c_officeOpen === true, 'office unlocked');
+  ok(!s.inv.includes('officekey'), 'office key consumed');
+  await tap2('c_officedoor');
+  s = await state2();
+  ok(s.scene === 'office', 'inside the harbor office');
+  await shot('28-ch3-office');
+  ok(await page.evaluate(() => !!document.getElementById('of-fireiron')), 'fire iron visible by the stove before pickup');
+  await tap2('c_floorboard');
+  ok((await captionText()).includes('nailed flush'), 'floorboard needs prying');
+  await tap2('c_stove');
+  s = await state2();
+  ok(s.inv.includes('fireiron'), 'took the fire iron');
+  ok(await page.evaluate(() => !document.getElementById('of-fireiron')), 'fire iron art gone from the stove');
+  await useItem('fireiron', 'c_floorboard');
+  s = await state2();
+  ok(s.flags.c_gotChart === true, 'floorboard pried up');
+  ok(s.clues.includes('c_chart') && s.clues.includes('c_letters'), 'chart + Collector\'s letters recovered');
+  ok(await page.evaluate(() => !!document.getElementById('of-board-open')), 'floorboard art shows pried open');
+
+  console.log('\n== The cliffs: disarming the relay ==');
+  await tap2('c_exit2');
+  s = await state2();
+  ok(s.scene === 'dockstorm', 'back at the storm dock');
+  await tap2('c_tocliffs3');
+  s = await state2();
+  ok(s.scene === 'cliffs3', 'reached the black cliffs');
+  await shot('29-ch3-cliffs');
+  await tap2('c_relay');
+  ok((await captionText()).includes('screwed down'), 'relay panel needs prying first');
+  await useItem('fireiron', 'c_relay');
+  s = await state2();
+  ok(s.flags.c_panelOpen === true, 'relay access panel pried open');
+  await tap2('c_relay');
+  ok(await page.locator('#puzzle-overlay').isVisible(), 'relay keypad opens');
+  for (const k of ['1', '8', '9', '1']) await page.locator('.key', { hasText: new RegExp('^' + k + '$') }).click();
+  await page.waitForTimeout(700);
+  s = await state2();
+  ok(!s.flags.c_shutterOff, 'wrong year keeps the shutter locked');
+  for (const k of ['1', '8', '9', '3']) await page.locator('.key', { hasText: new RegExp('^' + k + '$') }).click();
+  await page.waitForTimeout(700);
+  s = await state2();
+  ok(s.flags.c_shutterOff === true, '1893 disarms the relay');
+  ok(s.clues.includes('c_relay'), 'relay clue recorded');
+
+  console.log('\n== The lamp room: winding the storm reserve ==');
+  await tap2('c_backdock');
+  await tap2('c_tolamp3');
+  s = await state2();
+  ok(s.scene === 'lamp3', 'reached the storm-lashed lamp room');
+  await shot('30-ch3-lamp3');
+  await tap2('c_reserve');
+  ok((await captionText()).includes('hear Alvar out'), 'reserve locked until Alvar is briefed');
+  await tap2('c_alvar_npc');
+  d = await advanceDialog();
+  ok(d.closed, 'Alvar briefing completes');
+  s = await state2();
+  ok(s.flags.c_alvarBriefed === true, 'Alvar briefed and ready');
+
+  await tap2('c_reserve');
+  ok(await page.locator('#reserve-svg').isVisible(), 'storm-reserve flywheel puzzle opens');
+  await shot('31-ch3-reserve');
+  // deliberate miss on the far side of the wheel, then three good catches
+  await page.waitForFunction(() => parseFloat(document.getElementById('reserve-svg').dataset.diff || '0') > 120);
+  await page.locator('.bell-pull-btn').click();
+  ok((await page.locator('#puzzle-panel .solved-note').textContent()).includes('Missed'), 'catching off the notch is rejected');
+  ok(await page.evaluate(() => document.querySelectorAll('.bell-pip.hit').length === 0), 'no progress from a missed catch');
+  for (let target = 1; target <= 3; target++) {
+    let done = false;
+    for (let tries = 0; tries < 20 && !done; tries++) {
+      await page.waitForFunction(() => {
+        const s = document.getElementById('reserve-svg');
+        return s && parseFloat(s.dataset.diff || '999') < 6;
+      });
+      await page.locator('.bell-pull-btn').click();
+      done = await page.evaluate(t => document.querySelectorAll('.bell-pip.hit').length >= t, target);
+      if (!done) await page.waitForTimeout(200);
+    }
+    ok(done, 'good catch #' + target + ' lands');
+  }
+  await page.waitForTimeout(1000);
+  s = await state2();
+  ok(s.flags.c_wound === true, 'storm reserve fully wound');
+
+  console.log('\n== The finale cutscene ==');
+  // solvePuzzle waits 900ms then onSolve waits another 500ms before the
+  // cutscene starts; give it a comfortable margin beyond that chain.
+  await page.waitForSelector('#prologue-screen:not(.hidden)', { timeout: 5000 });
+  ok(await page.locator('#prologue-screen').isVisible(), 'finale intro cutscene begins automatically');
+  const fin1 = await page.locator('#prologue-caption').textContent();
+  ok(fin1.includes('BLAZES'), 'finale slide 1: light and bell overwhelm the storm');
+  await shot('32-ch3-finale1');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(350);
+  ok((await page.locator('#prologue-caption').textContent()).includes('schooner'), 'finale slide 2: the schooner caught in the beam');
+  await shot('33-ch3-finale2');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(300);
+  await page.locator('#dialog-overlay').click({ position: { x: Math.floor(vw / 2), y: vh - 90 }, timeout: 1500 }).catch(() => {});
+  await page.waitForTimeout(300);
+  d = await advanceDialog();
+  ok(!d.closed && d.choices.length === 2, 'the finale choice appears after the cutscene');
+  await shot('34-ch3-choice');
+  await pickChoice('Ring the bell once more');
+  d = await advanceDialog();
+  ok(d.closed, 'finale dialogue resolves');
+  await page.waitForTimeout(600);
+  ok(await page.locator('#prologue-screen').isVisible(), 'outro cutscene plays (dawn, the strongbox)');
+  await shot('35-ch3-outro');
+  await page.locator('#prologue-screen').click();
+  await page.waitForTimeout(1500);
+  ok(await page.locator('#ending-screen').isVisible(), 'chapter three ending shows');
+  ok((await page.locator('#ending-title').textContent()) === 'The Light Endures Still', 'ch3 ending title correct');
+  await page.waitForTimeout(6500);
+  ok(await page.locator('#ending-text p').count() === 4, 'ch3 epilogue has 4 paragraphs');
+  const opsBeforeStale = await page.evaluate(() => [...document.querySelectorAll('#ending-text p')].map(p => getComputedStyle(p).opacity));
+  ok(opsBeforeStale.every(o => parseFloat(o) > 0.9), 'all 4 epilogue paragraphs fully faded in (' + opsBeforeStale.join(',') + ')');
+  await shot('36-ch3-ending');
+  // regression: a manually-skipped cutscene slide used to leave its auto-advance
+  // timer running, which could re-fire onDone() (re-triggering showEnding, wiping
+  // the fade-in) about 8.5s after the slide first painted. Wait past that window.
+  await page.waitForTimeout(2500);
+  const opsAfterStale = await page.evaluate(() => [...document.querySelectorAll('#ending-text p')].map(p => getComputedStyle(p).opacity));
+  ok(opsAfterStale.every(o => parseFloat(o) > 0.9), 'epilogue stays fully visible past the old stale-timer window (' + opsAfterStale.join(',') + ')');
+  ok(await page.locator('#ending-screen').isVisible(), 'still on the ending screen, not reset');
+  meta = await page.evaluate(() => JSON.parse(localStorage.getItem('greyharbor_meta_v1')));
+  ok(meta.ch1Done === true && meta.ch2Done === true && meta.ch3Done === true, 'all three chapters recorded as finished');
   ok(await page.locator('#btn-next-chapter').isHidden(), 'no next-chapter button after the final chapter');
-  const mb2 = await page.locator('#btn-again').boundingBox();
-  ok(mb2 && mb2.y + mb2.height <= vh, 'Main Menu button on screen at ch2 ending');
+  const mb3 = await page.locator('#btn-again').boundingBox();
+  ok(mb3 && mb3.y + mb3.height <= vh, 'Main Menu button on screen at ch3 ending');
   await page.locator('#btn-again').click();
   await page.waitForTimeout(400);
   ok(await page.locator('#title-screen').isVisible(), 'back at the main menu');
-  ok(await page.locator('#lock-ch2').isHidden(), 'Chapter Two shown unlocked on title');
-  ok(await page.locator('#btn-new-ch2').isVisible(), 'Chapter Two startable from title');
-  ok((await page.locator('#card-ch1 .chapter-done').textContent()).includes('solved'), 'Chapter One marked solved');
-  ok((await page.locator('#card-ch2 .chapter-done').textContent()).includes('solved'), 'Chapter Two marked solved on title');
-  await shot('18-title-both-solved');
+  ok(await page.locator('#lock-ch3').isHidden(), 'Chapter Three shown unlocked on title');
+  ok((await page.locator('#card-ch3 .chapter-done').textContent()).includes('solved'), 'Chapter Three marked solved on title');
+  await shot('18-title-all-solved');
 
   console.log('\n== Save/continue mid-game ==');
   SAVEKEY = 'greyharbor_save_v1';
